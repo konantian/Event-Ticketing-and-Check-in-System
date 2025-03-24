@@ -30,8 +30,8 @@
    - `email`: Unique identifier for the user
    - `password`: Hashed password
    - `role`: User role (Organizer, Staff, Attendee)
-   - `createdAt`: Timestamp of user creation
-   - `updatedAt`: Timestamp of last update
+   - `createdAt`: Timestamp of user creation (Optional)
+   - `updatedAt`: Timestamp of last update (Optional)
 
 2. **Event Table**
    - `id`: Primary Key
@@ -42,8 +42,8 @@
    - `location`: Event location
    - `startTime`: Start time of the event
    - `endTime`: End time of the event
-   - `createdAt`: Timestamp of event creation
-   - `updatedAt`: Timestamp of last update
+   - `createdAt`: Timestamp of event creation (Optional)
+   - `updatedAt`: Timestamp of last update (Optional)
 
 3. **Ticket Table**
    - `id`: Primary Key
@@ -52,11 +52,11 @@
    - `price`: Price of the ticket
    - `tier`: Ticket tier (General, VIP)
    - `qrCodeData`: Encrypted QR code data
-   - `discountCodeId`: Foreign Key referencing Discount
-   - `createdAt`: Timestamp of ticket creation
-   - `updatedAt`: Timestamp of last update
+   - `discountCodeId`: Foreign Key referencing Discount (Optional)
+   - `createdAt`: Timestamp of ticket creation (Optional)
+   - `updatedAt`: Timestamp of last update (Optional)
 
-4. **Check-in Table** (Optional)
+4. **Check-in Table**
    - `id`: Primary Key
    - `ticketId`: Foreign Key referencing Ticket
    - `status`: Check-in status (Checked In, Not Checked In)
@@ -67,7 +67,7 @@
    - `code`: Discount code
    - `type`: Discount type (Percentage or Fixed Amount)
    - `value`: Discount value
-   - `timesUsed`: Number of times the discount has been used
+   - `timesUsed`: Number of times the discount has been used (Optional)
 
 ## API Endpoints
 
@@ -88,8 +88,8 @@
    - `GET /api/tickets`: List all tickets for a user
    - `GET /api/tickets/:id`: Get details of a specific ticket
 
-4. **Check-in Management** (Optional)
-   - `POST /api/checkin`: Check-in a user using a QR code
+4. **Check-in Management** 
+   - `POST /api/checkin`: Check in a user using a QR code
    - `GET /api/checkin/status`: Get check-in status for an event
 
 5. **Discount Management**
