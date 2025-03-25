@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
+        { success: false, message: 'User is not registered' },
         { status: 401 }
       );
     }
