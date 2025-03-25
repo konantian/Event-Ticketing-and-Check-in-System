@@ -65,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     }
 
     // Verify authentication
-    const { authorized, user, error } = await verifyAuth(req);
+    const { authorized, user, body: requestData, error } = await verifyAuth(req);
 
     if (!authorized) {
       return unauthorized();
@@ -87,7 +87,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
       return forbidden();
     }
 
-    const body = await req.json();
+    // Extract update fields from the filtered request data
     const { 
       name, 
       description, 
@@ -95,7 +95,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
       location, 
       startTime, 
       endTime 
-    } = body;
+    } = requestData;
 
     // Update event
     const updatedEvent = await prisma.event.update({
@@ -136,11 +136,14 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify authentication
+    // Verify authentication from URL query parameters
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized) {
-      return unauthorized();
+      return NextResponse.json(
+        { success: false, message: error || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     // Check if event exists and user is the organizer

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { prisma } from '@/app/lib/prisma';
-import { generateToken } from '@/app/lib/auth';
+import { verifyCredentials } from '@/app/lib/auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,44 +14,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // Verify credentials
+    const result = await verifyCredentials(email, password);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, message: result.message },
+        { status: 401 }
+      );
+    }
+
+    // Return user info - client needs to send email/password with each request
+    return NextResponse.json({
+      success: true,
+      message: 'Login successful',
+      user: result.user,
     });
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'User is not registered' },
-        { status: 401 }
-      );
-    }
-
-    // Verify password
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    // Generate JWT token
-    const token = generateToken(user.id, user.email, user.role);
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Login successful',
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-      },
-      { status: 200 }
-    );
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
