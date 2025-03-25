@@ -8,15 +8,60 @@ generator client {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  // TODO: Add more fields as needed
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  role      String    // Organizer, Staff, Attendee
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  events    Event[]   // Events organized by the user
+  tickets   Ticket[]  // Tickets purchased by the user
 }
 
 model Event {
-  id          Int    @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   description String
-  // TODO: Add more fields for event details
+  capacity    Int
+  location    String
+  startTime   DateTime
+  endTime     DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  organizer   User      @relation(fields: [organizerId], references: [id])
+  organizerId Int
+  tickets     Ticket[]  // Tickets for this event
+}
+
+model Ticket {
+  id             Int       @id @default(autoincrement())
+  user           User      @relation(fields: [userId], references: [id])
+  userId         Int
+  event          Event     @relation(fields: [eventId], references: [id])
+  eventId        Int
+  price          Float
+  tier           String    // General, VIP
+  qrCodeData     String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  discount       Discount? @relation(fields: [discountCodeId], references: [id])
+  discountCodeId Int?
+  checkIn        CheckIn?
+}
+
+model CheckIn {
+  id        Int      @id @default(autoincrement())
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  ticketId  Int      @unique
+  status    String   // Checked In, Not Checked In
+  timestamp DateTime @default(now())
+}
+
+model Discount {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  type      String   // Percentage or Fixed Amount
+  value     Float
+  timesUsed Int      @default(0)
+  tickets   Ticket[]
 } 
