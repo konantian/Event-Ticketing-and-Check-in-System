@@ -2,18 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
+interface Params {
+  params: Promise<{ id: string }>;
+}
+
 // GET - Get details of a specific discount code
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   try {
-    const { id } = params;
+    // Get the id from params (which is now a Promise in Next.js 15)
+    const { id } = await params;
 
     // Verify authentication (only Organizers can access discount details)
     const { authorized, user, error } = await verifyAuth(req);
 
-    if (!authorized) {
+    if (!authorized || !user) {
       return unauthorized();
     }
 

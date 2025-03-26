@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyCredentials } from '@/app/lib/auth';
+import { prisma } from '@/app/lib/prisma';
+import bcrypt from 'bcrypt';
+
+// Local implementation of verifyCredentials
+async function verifyCredentials(email: string, password: string) {
+  // Find user
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    return { success: false, message: 'Invalid credentials' };
+  }
+
+  // Verify password
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (!passwordMatch) {
+    return { success: false, message: 'Invalid credentials' };
+  }
+
+  return {
+    success: true,
+    message: 'Authentication successful',
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {

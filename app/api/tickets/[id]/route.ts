@@ -3,17 +3,16 @@ import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized } from '@/app/lib/auth';
 
 interface Params {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 // GET - Get details of a specific ticket
 export async function GET(req: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(ticketId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid ticket ID' },
         { status: 400 }
@@ -23,13 +22,13 @@ export async function GET(req: NextRequest, { params }: Params) {
     // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
-    if (!authorized) {
+    if (!authorized || !user) {
       return unauthorized();
     }
 
     // Get ticket
     const ticket = await prisma.ticket.findUnique({
-      where: { id },
+      where: { id: ticketId },
       include: {
         event: true,
         user: {

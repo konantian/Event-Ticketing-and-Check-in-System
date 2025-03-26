@@ -33,6 +33,7 @@ export async function verifyCredentials(email: string, password: string) {
 
 export async function verifyAuth(req: NextRequest) {
   try {
+    // Continue with normal authentication
     let email: string | null = null;
     let password: string | null = null;
     let body: Record<string, any> = {};
@@ -83,7 +84,7 @@ export async function verifyAuth(req: NextRequest) {
 }
 
 export function isRole(user: any, roles: string[]) {
-  return roles.includes(user.role);
+  return user && roles.includes(user.role);
 }
 
 export function unauthorized() {

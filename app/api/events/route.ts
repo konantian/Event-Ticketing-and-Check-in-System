@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
-    if (!authorized) {
+    if (!authorized || !user) {
       return unauthorized();
     }
 

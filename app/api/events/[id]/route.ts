@@ -3,17 +3,16 @@ import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
 interface Params {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 // GET - Fetch a specific event
 export async function GET(req: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid event ID' },
         { status: 400 }
@@ -21,7 +20,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     const event = await prisma.event.findUnique({
-      where: { id },
+      where: { id: eventId },
       include: {
         organizer: {
           select: {
@@ -55,9 +54,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 // PUT - Update a specific event (Organizer only)
 export async function PUT(req: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid event ID' },
         { status: 400 }
@@ -67,13 +67,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
     // Verify authentication
     const { authorized, user, body: requestData, error } = await verifyAuth(req);
 
-    if (!authorized) {
+    if (!authorized || !user) {
       return unauthorized();
     }
 
     // Check if event exists and user is the organizer
     const event = await prisma.event.findUnique({
-      where: { id },
+      where: { id: eventId },
     });
 
     if (!event) {
@@ -99,7 +99,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     // Update event
     const updatedEvent = await prisma.event.update({
-      where: { id },
+      where: { id: eventId },
       data: {
         name: name || event.name,
         description: description || event.description,
@@ -127,9 +127,10 @@ export async function PUT(req: NextRequest, { params }: Params) {
 // DELETE - Delete a specific event (Organizer only)
 export async function DELETE(req: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params;
+    const eventId = parseInt(id);
     
-    if (isNaN(id)) {
+    if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid event ID' },
         { status: 400 }
@@ -139,7 +140,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     // Verify authentication from URL query parameters
     const { authorized, user, error } = await verifyAuth(req);
 
-    if (!authorized) {
+    if (!authorized || !user) {
       return NextResponse.json(
         { success: false, message: error || 'Unauthorized' },
         { status: 401 }
@@ -148,7 +149,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     // Check if event exists and user is the organizer
     const event = await prisma.event.findUnique({
-      where: { id },
+      where: { id: eventId },
     });
 
     if (!event) {
@@ -164,7 +165,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
 
     // Delete event
     await prisma.event.delete({
-      where: { id },
+      where: { id: eventId },
     });
 
     return NextResponse.json({
