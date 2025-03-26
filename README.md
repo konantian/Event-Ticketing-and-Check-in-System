@@ -19,9 +19,7 @@
 
 ## Environment Variables
 
-- `PORT`: The port on which the server runs.
 - `DATABASE_URL`: The connection string for your PostgreSQL database.
-- `JWT_SECRET`: The secret key for signing JWTs.
 
 ## Database Tables
 
