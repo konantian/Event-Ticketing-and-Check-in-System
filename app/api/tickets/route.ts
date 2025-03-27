@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
     // Get user's tickets
     const tickets = await prisma.ticket.findMany({
-      where: { userId: user.id },
+      where: { userId: Number(user.id) },
       include: {
         event: true,
         checkIn: true,
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
     // Create ticket
     const ticket = await prisma.ticket.create({
       data: {
-        userId: user.id,
+        userId: Number(user.id),
         eventId: Number(eventId),
         price,
         tier,

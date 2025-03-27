@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken, getTokenFromHeader } from './jwt';
 import { prisma } from './prisma';
 import bcrypt from 'bcrypt';
 
@@ -33,50 +34,37 @@ export async function verifyCredentials(email: string, password: string) {
 
 export async function verifyAuth(req: NextRequest) {
   try {
-    // Continue with normal authentication
-    let email: string | null = null;
-    let password: string | null = null;
-    let body: Record<string, any> = {};
-    
-    // For DELETE requests, get credentials from URL parameters
-    if (req.method === 'DELETE') {
-      const url = new URL(req.url);
-      email = url.searchParams.get('email');
-      password = url.searchParams.get('password');
-    } else {
-      // Get credentials from request body for other methods
-      body = await req.json();
-      email = body.email;
-      password = body.password;
+    const authHeader = req.headers.get('authorization');
+    const token = getTokenFromHeader(authHeader || '');
+
+    if (!token) {
+      return { authorized: false, error: 'Authentication required' };
     }
-    
-    if (!email || !password) {
-      return { authorized: false, error: 'Credentials required' };
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return { authorized: false, error: 'Invalid or expired token' };
     }
-    
-    // Verify the credentials
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-    
-    if (!user) {
-      return { authorized: false, error: 'User not found' };
+
+    // Get request body if available
+    let body = {};
+    try {
+      if (req.method !== 'GET' && req.method !== 'DELETE') {
+        const clonedReq = req.clone();
+        body = await clonedReq.json();
+      }
+    } catch (e) {
+      console.warn('Could not parse request body');
     }
-    
-    // Verify password
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    
-    if (!passwordMatch) {
-      return { authorized: false, error: 'Invalid password' };
-    }
-    
+
     return { 
       authorized: true, 
-      user: { id: user.id, email: user.email, role: user.role },
-      // Return the original request body without the credentials
-      body: Object.fromEntries(
-        Object.entries(body).filter(([key]) => !['email', 'password'].includes(key))
-      )
+      user: {
+        id: payload.userId,
+        email: payload.email,
+        role: payload.role
+      },
+      body
     };
   } catch (error) {
     return { authorized: false, error: 'Authentication error' };

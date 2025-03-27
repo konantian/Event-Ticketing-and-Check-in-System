@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         location,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        organizerId: user.id,
+        organizerId: Number(user.id),
       },
     });
 

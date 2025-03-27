@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     // Check if user is the ticket owner or an organizer/staff
-    if (ticket.userId !== user.id && !['Organizer', 'Staff'].includes(user.role)) {
+    if (ticket.userId !== Number(user.id) && !['Organizer', 'Staff'].includes(user.role)) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized to view this ticket' },
         { status: 403 }

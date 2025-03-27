@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/app/lib/prisma';
+import { signToken } from '@/app/lib/jwt';
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,7 +40,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Return user info - client needs to send email/password with each request
+    // Generate JWT token
+    const token = signToken({
+      userId: user.id.toString(),
+      email: user.email,
+      role: user.role
+    });
+
+    // Return user info and token
     return NextResponse.json({
       success: true,
       message: 'User registered successfully',
@@ -48,6 +56,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role,
       },
+      token: token
     }, { status: 201 });
   } catch (error) {
     console.error('Registration error:', error);

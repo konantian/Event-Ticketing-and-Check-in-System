@@ -65,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     }
 
     // Verify authentication
-    const { authorized, user, body: requestData, error } = await verifyAuth(req);
+    const { authorized, user, body: requestData } = await verifyAuth(req);
 
     if (!authorized || !user) {
       return unauthorized();
@@ -83,11 +83,11 @@ export async function PUT(req: NextRequest, { params }: Params) {
       );
     }
 
-    if (event.organizerId !== user.id && !isRole(user, ['Organizer'])) {
+    if (event.organizerId !== Number(user.id) && !isRole(user, ['Organizer'])) {
       return forbidden();
     }
 
-    // Extract update fields from the filtered request data
+    // Extract update fields from the request data
     const { 
       name, 
       description, 
@@ -95,7 +95,14 @@ export async function PUT(req: NextRequest, { params }: Params) {
       location, 
       startTime, 
       endTime 
-    } = requestData;
+    } = requestData as {
+      name?: string;
+      description?: string;
+      capacity?: number;
+      location?: string;
+      startTime?: string;
+      endTime?: string;
+    };
 
     // Update event
     const updatedEvent = await prisma.event.update({
@@ -137,14 +144,11 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify authentication from URL query parameters
-    const { authorized, user, error } = await verifyAuth(req);
+    // Verify authentication
+    const { authorized, user } = await verifyAuth(req);
 
     if (!authorized || !user) {
-      return NextResponse.json(
-        { success: false, message: error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return unauthorized();
     }
 
     // Check if event exists and user is the organizer
@@ -159,7 +163,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       );
     }
 
-    if (event.organizerId !== user.id && !isRole(user, ['Organizer'])) {
+    if (event.organizerId !== Number(user.id) && !isRole(user, ['Organizer'])) {
       return forbidden();
     }
 
