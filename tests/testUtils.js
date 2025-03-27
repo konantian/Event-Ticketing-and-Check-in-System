@@ -1,12 +1,17 @@
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
+const dotenv = require('dotenv');
+const crypto = require('crypto');
 
-// Initialize Prisma client
+// Load test environment variables
+dotenv.config({ path: '.env.test' });
+
+// Initialize Prisma client with test configuration
 const prisma = new PrismaClient();
 
 /**
  * Creates a test user in the database
- * @param {Object} userParams - Optional user parameters to override defaults
+ * @param {Object} userParams - User parameters including role
  * @returns {Promise<Object>} The created user object
  */
 async function createTestUser(userParams = {}) {
@@ -36,7 +41,7 @@ async function createTestUser(userParams = {}) {
 /**
  * Creates a test event in the database
  * @param {string} organizerId - ID of the organizer user
- * @param {Object} eventParams - Optional event parameters to override defaults
+ * @param {Object} eventParams - Optional event parameters
  * @returns {Promise<Object>} The created event object
  */
 async function createTestEvent(organizerId, eventParams = {}) {
@@ -68,9 +73,18 @@ async function createTestEvent(organizerId, eventParams = {}) {
   return event;
 }
 
-// Generate test ticket data
+/**
+ * Creates a test ticket in the database
+ * @param {string} userId - ID of the ticket owner
+ * @param {string} eventId - ID of the event
+ * @param {string} tier - Ticket tier
+ * @param {number} price - Ticket price
+ * @returns {Promise<Object>} The created ticket object
+ */
 async function createTestTicket(userId, eventId, tier = 'General', price = 10.0) {
-  const qrCodeData = createHash('sha256').update(`${userId}-${eventId}-${Date.now()}`).digest('hex');
+  const qrCodeData = crypto.createHash('sha256')
+    .update(`${userId}-${eventId}-${Date.now()}`)
+    .digest('hex');
   
   const ticket = await prisma.ticket.create({
     data: {
@@ -85,7 +99,13 @@ async function createTestTicket(userId, eventId, tier = 'General', price = 10.0)
   return ticket;
 }
 
-// Generate test discount data
+/**
+ * Creates a test discount in the database
+ * @param {string} code - Discount code
+ * @param {string} type - Discount type
+ * @param {number} value - Discount value
+ * @returns {Promise<Object>} The created discount object
+ */
 async function createTestDiscount(code = null, type = 'Percentage', value = 10) {
   const discountCode = code || `DISC-${Date.now()}`;
   
