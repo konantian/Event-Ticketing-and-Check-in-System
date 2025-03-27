@@ -1,5 +1,9 @@
 const bcrypt = require('bcrypt');
 const { prisma } = require('../testUtils');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key';
+const JWT_EXPIRES_IN = '20m';
 
 // Mock handlers for the API routes
 
@@ -42,6 +46,13 @@ const authHandlers = {
         },
       });
 
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: user.id.toString(), email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
 
@@ -49,6 +60,7 @@ const authHandlers = {
         success: true,
         message: 'User registered successfully',
         user: userWithoutPassword,
+        token
       });
     } catch (error) {
       console.error('Registration error:', error);
@@ -94,6 +106,13 @@ const authHandlers = {
         });
       }
 
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: user.id.toString(), email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+      );
+
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
 
@@ -101,6 +120,7 @@ const authHandlers = {
         success: true,
         message: 'Login successful',
         user: userWithoutPassword,
+        token
       });
     } catch (error) {
       console.error('Login error:', error);
