@@ -19,7 +19,8 @@
 
 ## Environment Variables
 
-- `DATABASE_URL`: The connection string for your PostgreSQL database.
+- `DATABASE_URL`: The connection string for PostgreSQL database.
+- `JWT_SECRET`: A secure random string used to sign and verify JSON Web Tokens (JWTs). This should be a long, random string and should be kept secret. Used for user authentication and session management. Use the different version for local and prod environment.
 
 ## Database Tables
 
@@ -70,27 +71,311 @@
 ## API Endpoints
 
 1. **User Authentication**
-   - `POST /api/register`: Register a new user
-   - `POST /api/login`: Authenticate a user and return a JWT
-   - `GET /api/user`: Get user details (requires authentication)
+   - `POST /api/register`
+     ```json
+     // Request
+     {
+       "email": "string",
+       "password": "string",
+       "role": "Organizer" | "Staff" | "Attendee"
+     }
+     
+     // Response
+     {
+       "id": "string",
+       "email": "string",
+       "role": "string",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
+   - `POST /api/login`
+     ```json
+     // Request
+     {
+       "email": "string",
+       "password": "string"
+     }
+     
+     // Response
+     {
+       "token": "string (JWT)",
+       "user": {
+         "id": "string",
+         "email": "string",
+         "role": "string"
+       }
+     }
+     ```
+   - `GET /api/user`
+     ```json
+     // Response
+     {
+       "id": "string",
+       "email": "string",
+       "role": "string",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
 
 2. **Event Management**
-   - `POST /api/events`: Create a new event (Organizer only)
-   - `GET /api/events`: List all events
-   - `GET /api/events/:id`: Get details of a specific event
-   - `PUT /api/events/:id`: Update event details (Organizer only)
-   - `DELETE /api/events/:id`: Delete an event (Organizer only)
+   - `POST /api/events`
+     ```json
+     // Request
+     {
+       "name": "string",
+       "description": "string",
+       "capacity": "number",
+       "location": "string",
+       "startTime": "string (ISO date)",
+       "endTime": "string (ISO date)"
+     }
+     
+     // Response
+     {
+       "id": "string",
+       "organizerId": "string",
+       "name": "string",
+       "description": "string",
+       "capacity": "number",
+       "location": "string",
+       "startTime": "string (ISO date)",
+       "endTime": "string (ISO date)",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
+   - `GET /api/events`
+     ```json
+     // Response
+     {
+       "events": [
+         {
+           "id": "string",
+           "organizerId": "string",
+           "name": "string",
+           "description": "string",
+           "capacity": "number",
+           "location": "string",
+           "startTime": "string (ISO date)",
+           "endTime": "string (ISO date)",
+           "createdAt": "string (ISO date)",
+           "updatedAt": "string (ISO date)"
+         }
+       ],
+       "total": "number",
+       "page": "number",
+       "limit": "number"
+     }
+     ```
+   - `GET /api/events/:id`
+     ```json
+     // Response
+     {
+       "id": "string",
+       "organizerId": "string",
+       "name": "string",
+       "description": "string",
+       "capacity": "number",
+       "location": "string",
+       "startTime": "string (ISO date)",
+       "endTime": "string (ISO date)",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
+   - `PUT /api/events/:id`
+     ```json
+     // Request
+     {
+       "name": "string",
+       "description": "string",
+       "capacity": "number",
+       "location": "string",
+       "startTime": "string (ISO date)",
+       "endTime": "string (ISO date)"
+     }
+     
+     // Response
+     {
+       "id": "string",
+       "organizerId": "string",
+       "name": "string",
+       "description": "string",
+       "capacity": "number",
+       "location": "string",
+       "startTime": "string (ISO date)",
+       "endTime": "string (ISO date)",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
+   - `DELETE /api/events/:id`
+     ```json
+     // Response
+     {
+       "success": "boolean",
+       "message": "string"
+     }
+     ```
 
 3. **Ticket Management**
-   - `POST /api/tickets`: Purchase a ticket for an event
-   - `GET /api/tickets`: List all tickets for a user
-   - `GET /api/tickets/:id`: Get details of a specific ticket
+   - `POST /api/tickets`
+     ```json
+     // Request
+     {
+       "eventId": "string",
+       "tier": "General" | "VIP",
+       "discountCode": "string (optional)"
+     }
+     
+     // Response
+     {
+       "id": "string",
+       "userId": "string",
+       "eventId": "string",
+       "price": "number",
+       "tier": "string",
+       "qrCodeData": "string",
+       "discountCodeId": "string (optional)",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
+   - `GET /api/tickets`
+     ```json
+     // Response
+     {
+       "tickets": [
+         {
+           "id": "string",
+           "userId": "string",
+           "eventId": "string",
+           "price": "number",
+           "tier": "string",
+           "qrCodeData": "string",
+           "discountCodeId": "string (optional)",
+           "createdAt": "string (ISO date)",
+           "updatedAt": "string (ISO date)"
+         }
+       ],
+       "total": "number",
+       "page": "number",
+       "limit": "number"
+     }
+     ```
+   - `GET /api/tickets/:id`
+     ```json
+     // Response
+     {
+       "id": "string",
+       "userId": "string",
+       "eventId": "string",
+       "price": "number",
+       "tier": "string",
+       "qrCodeData": "string",
+       "discountCodeId": "string (optional)",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
 
-4. **Check-in Management** 
-   - `POST /api/checkin`: Check in a user using a QR code
-   - `GET /api/checkin/status`: Get check-in status for an event
+4. **Check-in Management**
+   - `POST /api/checkin`
+     ```json
+     // Request
+     {
+       "qrCodeData": "string"
+     }
+     
+     // Response
+     {
+       "success": "boolean",
+       "message": "string",
+       "checkIn": {
+         "id": "string",
+         "ticketId": "string",
+         "status": "Checked In",
+         "timestamp": "string (ISO date)"
+       }
+     }
+     ```
+   - `GET /api/checkin/status`
+     ```json
+     // Query Parameters
+     {
+       "eventId": "string"
+     }
+     
+     // Response
+     {
+       "eventId": "string",
+       "totalTickets": "number",
+       "checkedIn": "number",
+       "remaining": "number",
+       "checkIns": [
+         {
+           "id": "string",
+           "ticketId": "string",
+           "status": "string",
+           "timestamp": "string (ISO date)"
+         }
+       ]
+     }
+     ```
 
 5. **Discount Management**
-   - `POST /api/discounts`: Create a new discount code (Organizer only)
-   - `GET /api/discounts`: List all discount codes
-   - `GET /api/discounts/:id`: Get details of a specific discount code 
+   - `POST /api/discounts`
+     ```json
+     // Request
+     {
+       "code": "string",
+       "type": "Percentage" | "Fixed Amount",
+       "value": "number"
+     }
+     
+     // Response
+     {
+       "id": "string",
+       "code": "string",
+       "type": "string",
+       "value": "number",
+       "timesUsed": "number",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ```
+   - `GET /api/discounts`
+     ```json
+     // Response
+     {
+       "discounts": [
+         {
+           "id": "string",
+           "code": "string",
+           "type": "string",
+           "value": "number",
+           "timesUsed": "number",
+           "createdAt": "string (ISO date)",
+           "updatedAt": "string (ISO date)"
+         }
+       ],
+       "total": "number",
+       "page": "number",
+       "limit": "number"
+     }
+     ```
+   - `GET /api/discounts/:id`
+     ```json
+     // Response
+     {
+       "id": "string",
+       "code": "string",
+       "type": "string",
+       "value": "number",
+       "timesUsed": "number",
+       "createdAt": "string (ISO date)",
+       "updatedAt": "string (ISO date)"
+     }
+     ``` 
