@@ -6,7 +6,6 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
-// GET - Fetch a specific event
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
@@ -64,7 +63,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify authentication
     const { authorized, user, body: requestData } = await verifyAuth(req);
 
     if (!authorized || !user) {
@@ -104,7 +102,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
       endTime?: string;
     };
 
-    // Update event
     const updatedEvent = await prisma.event.update({
       where: { id: eventId },
       data: {
@@ -144,7 +141,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify authentication
     const { authorized, user } = await verifyAuth(req);
 
     if (!authorized || !user) {
@@ -167,7 +163,6 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       return forbidden();
     }
 
-    // Delete event
     await prisma.event.delete({
       where: { id: eventId },
     });

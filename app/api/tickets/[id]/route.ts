@@ -6,7 +6,6 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
-// GET - Get details of a specific ticket
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
@@ -19,14 +18,12 @@ export async function GET(req: NextRequest, { params }: Params) {
       );
     }
 
-    // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized || !user) {
       return unauthorized();
     }
 
-    // Get ticket
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {

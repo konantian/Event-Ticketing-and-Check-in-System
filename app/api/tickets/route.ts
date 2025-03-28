@@ -3,10 +3,8 @@ import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized } from '@/app/lib/auth';
 import crypto from 'crypto';
 
-// GET - List all tickets for a user
 export async function GET(req: NextRequest) {
   try {
-    // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized || !user) {
@@ -39,7 +37,6 @@ export async function GET(req: NextRequest) {
 // POST - Purchase a ticket for an event
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized || !user) {

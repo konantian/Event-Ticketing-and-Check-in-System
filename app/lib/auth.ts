@@ -3,9 +3,7 @@ import { verifyToken, getTokenFromHeader } from './jwt';
 import { prisma } from './prisma';
 import bcrypt from 'bcrypt';
 
-// Verify user credentials
 export async function verifyCredentials(email: string, password: string) {
-  // Find user
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -14,7 +12,6 @@ export async function verifyCredentials(email: string, password: string) {
     return { success: false, message: 'Invalid credentials' };
   }
 
-  // Verify password
   const passwordMatch = await bcrypt.compare(password, user.password);
 
   if (!passwordMatch) {

@@ -6,13 +6,11 @@ interface Params {
   params: Promise<{ id: string }>;
 }
 
-// GET - Get details of a specific discount code
 export async function GET(
   req: NextRequest,
   { params }: Params
 ) {
   try {
-    // Get the id from params (which is now a Promise in Next.js 15)
     const { id } = await params;
 
     // Verify authentication (only Organizers can access discount details)
@@ -26,7 +24,6 @@ export async function GET(
       return forbidden();
     }
 
-    // Validate ID
     if (!id || isNaN(parseInt(id))) {
       return NextResponse.json(
         { success: false, message: 'Invalid discount ID' },
@@ -34,7 +31,6 @@ export async function GET(
       );
     }
 
-    // Find the discount
     const discount = await prisma.discount.findUnique({
       where: { id: parseInt(id) },
     });

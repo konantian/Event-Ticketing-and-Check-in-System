@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
-// GET - List all events
 export async function GET(req: NextRequest) {
   try {
     const events = await prisma.event.findMany({
@@ -32,14 +31,12 @@ export async function GET(req: NextRequest) {
 // POST - Create a new event (Organizer only)
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized || !user) {
       return unauthorized();
     }
 
-    // Check if user is an organizer
     if (!isRole(user, ['Organizer'])) {
       return forbidden();
     }
@@ -54,7 +51,6 @@ export async function POST(req: NextRequest) {
       endTime 
     } = body;
 
-    // Validate input
     if (!name || !description || !capacity || !location || !startTime || !endTime) {
       return NextResponse.json(
         { success: false, message: 'All fields are required' },
@@ -62,7 +58,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create event
     const event = await prisma.event.create({
       data: {
         name,

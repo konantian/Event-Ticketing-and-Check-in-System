@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
-// GET - Get check-in status for an event
 export async function GET(req: NextRequest) {
   try {
     // Verify authentication (only Staff and Organizers can view check-in status)

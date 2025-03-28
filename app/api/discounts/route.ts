@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
-// GET - List all discount codes
 export async function GET(req: NextRequest) {
   try {
     // Verify authentication (only Organizers can list all discount codes)
@@ -16,7 +15,6 @@ export async function GET(req: NextRequest) {
       return forbidden();
     }
 
-    // Get all discount codes
     const discounts = await prisma.discount.findMany();
 
     return NextResponse.json({
@@ -35,7 +33,6 @@ export async function GET(req: NextRequest) {
 // POST - Create a new discount code (Organizer only)
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized) {
@@ -49,7 +46,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { code, type, value } = body;
 
-    // Validate input
     if (!code || !type || value === undefined) {
       return NextResponse.json(
         { success: false, message: 'Code, type, and value are required' },
@@ -78,7 +74,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if code already exists
     const existingDiscount = await prisma.discount.findFirst({
       where: { code },
     });
@@ -90,7 +85,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create discount code
     const discount = await prisma.discount.create({
       data: {
         code,

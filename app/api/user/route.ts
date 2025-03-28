@@ -3,14 +3,12 @@ import { verifyAuth, unauthorized } from '@/app/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
-    // Verify authentication
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized) {
       return unauthorized();
     }
 
-    // Return user data
     return NextResponse.json({
       success: true,
       user,

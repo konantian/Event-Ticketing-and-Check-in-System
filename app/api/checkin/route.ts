@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if ticket is already checked in
     if (ticket.checkIn) {
       return NextResponse.json(
         { 
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create check-in record
     const checkIn = await prisma.checkIn.create({
       data: {
         ticketId: ticket.id,

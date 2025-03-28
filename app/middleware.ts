@@ -3,14 +3,12 @@ import type { NextRequest } from 'next/server';
 import { verifyToken, getTokenFromHeader } from './lib/jwt';
 
 export function middleware(request: NextRequest) {
-  // List of paths that require authentication
   const protectedPaths = [
     '/api/events/create',
     '/api/tickets',
     '/api/user/profile',
     '/api/discounts',
     '/api/checkin',
-    // Add more protected paths as needed
   ];
 
   // Check if the current path requires authentication
