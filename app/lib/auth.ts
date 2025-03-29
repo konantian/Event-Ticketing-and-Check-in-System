@@ -43,6 +43,16 @@ export async function verifyAuth(req: NextRequest) {
       return { authorized: false, error: 'Invalid or expired token' };
     }
 
+    // Check if user still exists in database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: parseInt(payload.userId) },
+      select: { id: true, email: true, role: true }
+    });
+
+    if (!dbUser) {
+      return { authorized: false, error: 'User not found' };
+    }
+
     // Get request body if available
     let body = {};
     try {
@@ -56,11 +66,7 @@ export async function verifyAuth(req: NextRequest) {
 
     return { 
       authorized: true, 
-      user: {
-        id: payload.userId,
-        email: payload.email,
-        role: payload.role
-      },
+      user: dbUser,
       body
     };
   } catch (error) {

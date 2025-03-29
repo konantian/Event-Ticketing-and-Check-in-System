@@ -3,6 +3,15 @@ import { prisma } from '@/app/lib/prisma';
 import bcrypt from 'bcrypt';
 import { signToken } from '@/app/lib/jwt';
 
+function sanitizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 async function verifyCredentials(email: string, password: string) {
   const user = await prisma.user.findUnique({
     where: { email },
@@ -32,11 +41,20 @@ async function verifyCredentials(email: string, password: string) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password } = body;
+    let { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
         { success: false, message: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    email = sanitizeEmail(email);
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid email format' },
         { status: 400 }
       );
     }
