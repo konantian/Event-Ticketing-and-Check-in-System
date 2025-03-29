@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { prisma } from '@/app/lib/prisma';
+import { createUser, checkUserExists } from '@/app/lib/auth';
 import { signToken } from '@/app/lib/jwt';
-
-const VALID_ROLES = ['Attendee', 'Organizer', 'Admin'] as const;
-type UserRole = typeof VALID_ROLES[number];
-
-function sanitizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-function isValidPassword(password: string): boolean {
-  return password.length >= 8;
-}
-
-function isValidRole(role: string): role is UserRole {
-  return VALID_ROLES.includes(role as UserRole);
-}
+import { 
+  sanitizeEmail, 
+  isValidEmail, 
+  isValidPassword, 
+  isValidRole,
+  VALID_ROLES 
+} from '@/app/lib/validation';
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,29 +44,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
+    const userExists = await checkUserExists(email);
+    if (userExists) {
       return NextResponse.json(
         { success: false, message: 'User already exists' },
         { status: 409 }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role,
-      },
-    });
-
+    const user = await createUser(email, password, role);
+    
     const token = signToken({
-      userId: user.id.toString(),
+      userId: user.id,
       email: user.email,
       role: user.role
     });
@@ -88,12 +63,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'User registered successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      token: token
+      user,
+      token
     }, { status: 201 });
   } catch (error) {
     console.error('Registration error:', error);

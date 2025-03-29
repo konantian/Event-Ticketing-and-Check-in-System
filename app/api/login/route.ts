@@ -1,42 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/app/lib/prisma';
-import bcrypt from 'bcrypt';
+import { verifyCredentials } from '@/app/lib/auth';
 import { signToken } from '@/app/lib/jwt';
-
-function sanitizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-async function verifyCredentials(email: string, password: string) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) {
-    return { success: false, message: 'Invalid credentials' };
-  }
-
-  const passwordMatch = await bcrypt.compare(password, user.password);
-
-  if (!passwordMatch) {
-    return { success: false, message: 'Invalid credentials' };
-  }
-
-  return {
-    success: true,
-    message: 'Authentication successful',
-    user: {
-      id: user.id.toString(),
-      email: user.email,
-      role: user.role,
-    },
-  };
-}
+import { sanitizeEmail, isValidEmail } from '@/app/lib/validation';
 
 export async function POST(req: NextRequest) {
   try {

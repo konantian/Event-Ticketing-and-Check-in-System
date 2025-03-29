@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, getTokenFromHeader } from './jwt';
 import { prisma } from './prisma';
 import bcrypt from 'bcrypt';
+import { UserRole } from './validation';
 
 export async function verifyCredentials(email: string, password: string) {
   const user = await prisma.user.findUnique({
@@ -22,11 +23,36 @@ export async function verifyCredentials(email: string, password: string) {
     success: true,
     message: 'Authentication successful',
     user: {
-      id: user.id,
+      id: user.id.toString(),
       email: user.email,
       role: user.role,
     },
   };
+}
+
+export async function createUser(email: string, password: string, role: UserRole) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+      role,
+    },
+  });
+
+  return {
+    id: user.id.toString(),
+    email: user.email,
+    role: user.role,
+  };
+}
+
+export async function checkUserExists(email: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+  return !!user;
 }
 
 export async function verifyAuth(req: NextRequest) {
