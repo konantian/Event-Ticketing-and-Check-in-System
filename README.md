@@ -22,6 +22,47 @@
 - `DATABASE_URL`: The connection string for PostgreSQL database.
 - `JWT_SECRET`: A secure random string used to sign and verify JSON Web Tokens (JWTs). This should be a long, random string and should be kept secret. Used for user authentication and session management. Use the different version for local and prod environment.
 
+
+## Seeding the Database
+
+To populate your development database with sample users and events:
+
+
+```
+npm run seed
+```
+
+This command will create:
+
+🧑‍💼 One Organizer user
+
+🧑 One Attendee user
+
+🧑‍🔧 One Staff user
+
+Three sample events owned by the Organizer
+
+✅ Test Users
+Role	Email	Password
+Organizer	organizer@example.com	test1234
+Attendee	attendee@example.com	test1234
+Staff	staff@example.com	test1234
+
+## Using Prisma Studio
+
+use Prisma Studio to visually browse and edit local database:
+```
+npx prisma studio
+```
+This opens a web UI at http://localhost:5555, you can:
+
+View all tables: Users, Events, Tickets, Check-ins, Discounts
+
+Edit or add data for testing
+
+Explore relationships across tables
+
+
 ## Database Tables
 
 1. **User Table**
