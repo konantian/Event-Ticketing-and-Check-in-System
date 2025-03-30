@@ -1,41 +1,51 @@
-"use client";
-import React, { useEffect, useState } from 'react';
-import { useAuth } from './AuthContext';
+// app/components/TicketList.tsx
+'use client';
 
-const TicketList = () => {
-  const { token } = useAuth();
+import { useEffect, useState } from 'react';
+
+export default function TicketList() {
   const [tickets, setTickets] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchTickets = async () => {
-      const res = await fetch('/api/tickets', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      const enriched = await Promise.all(
-        data.tickets.map(async (ticket) => {
-          const ev = await fetch(`/api/events/${ticket.eventId}`);
-          const evData = await ev.json();
-          return { ...ticket, eventName: evData.name };
-        })
-      );
-      setTickets(enriched);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/tickets', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || 'Failed to load tickets');
+
+        setTickets(data.tickets || []);
+      } catch (err) {
+        setError(err.message);
+        setTickets([]);
+      }
     };
+
     fetchTickets();
-  }, [token]);
+  }, []);
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded">
-      <h2 className="text-xl font-bold mb-4">My Tickets</h2>
-      {tickets.map((ticket) => (
-        <div key={ticket.id} className="border p-4 mb-2 rounded">
-          <p><strong>Event:</strong> {ticket.eventName}</p>
-          <p><strong>Price:</strong> ${ticket.price}</p>
-          <p><strong>Tier:</strong> {ticket.tier}</p>
-        </div>
-      ))}
+    <div className="bg-white p-6 rounded shadow-md max-w-lg mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-center">My Tickets</h2>
+
+      {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+
+      <ul className="space-y-4">
+        {tickets.map((ticket) => (
+          <li key={ticket.id} className="p-4 border rounded shadow-sm">
+            <p><strong>Tier:</strong> {ticket.tier}</p>
+            <p><strong>Price:</strong> ${ticket.price}</p>
+            <p><strong>QR:</strong> {ticket.qrCodeData}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-};
-
-export default TicketList;
+}
