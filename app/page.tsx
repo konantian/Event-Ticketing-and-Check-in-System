@@ -42,37 +42,76 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
+      <div className="min-h-screen flex items-center justify-center text-gray-600 bg-gradient-to-tr from-yellow-100 to-indigo-100">
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <main className="max-w-6xl mx-auto p-6">
-      <h1 className="text-4xl font-bold mb-6 text-center">🎫 Event Ticketing System</h1>
+    <main className="min-h-screen bg-gradient-to-br from-yellow-50 via-sky-50 to-pink-50 px-6 py-4">
+      {/* Header */}
+      <header className="flex justify-between items-center mb-8 border-b pb-4">
+        <div className="flex items-center gap-3">
+          <img src="/ticket-icon.png" alt="Logo" className="w-10 h-10" />
+          <h1 className="text-3xl font-extrabold text-indigo-700 tracking-tight">
+            🎟️ Event Ticketing System
+          </h1>
+        </div>
 
-      {user && (
-        <div className="flex justify-between mb-4 items-center">
-          <p className="text-gray-600">Logged in as: <strong>{user.email}</strong> ({user.role})</p>
-          <LogoutButton onLogout={() => setUser(null)} />
+        <div className="space-x-3">
+          {user ? (
+            <>
+              <span className="text-sm text-gray-700">
+                Welcome, <strong>{user.email}</strong> ({user.role})
+              </span>
+              <LogoutButton onLogout={() => setUser(null)} />
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  setShowLogin(true);
+                  setShowRegister(false);
+                }}
+                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => {
+                  setShowRegister(true);
+                  setShowLogin(false);
+                }}
+                className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition"
+              >
+                Register
+              </button>
+            </>
+          )}
+        </div>
+      </header>
+
+      {/* All Events - Public */}
+      <AllEvents user={user} setShowLogin={setShowLogin} />
+
+      {/* My Tickets - Attendee only */}
+      {user?.role === 'Attendee' && (
+        <div className="mt-10">
+          <TicketList />
         </div>
       )}
 
-      {/* Public event list */}
-      <AllEvents user={user} setShowLogin={setShowLogin} />
+      {/* Auth Forms */}
+      {!user && showLogin && (
+        <div className="mt-10">
+          <Login onLoginSuccess={setUser} />
+        </div>
+      )}
 
-      {/* Show tickets only if logged in as Attendee */}
-      {user?.role === 'Attendee' && <TicketList />}
-
-      {/* Login/Register modals or inline components */}
-      {!user && showLogin && <Login onLoginSuccess={setUser} />}
-      {!user && showRegister && <Register onRegisterSuccess={setUser} />}
-
-      {!user && !showLogin && !showRegister && (
-        <div className="text-center mt-8 space-x-4">
-          <button onClick={() => setShowLogin(true)} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
-          <button onClick={() => setShowRegister(true)} className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Register</button>
+      {!user && showRegister && (
+        <div className="mt-10">
+          <Register onRegisterSuccess={setUser} />
         </div>
       )}
     </main>

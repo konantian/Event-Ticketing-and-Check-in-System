@@ -46,28 +46,54 @@ export default function AllEvents({ user, setShowLogin }) {
     };
   
     return (
-      <div className="mt-10">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Available Events</h2>
-        {message && <p className="text-center text-yellow-600 mb-4">{message}</p>}
-  
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {events.map((event) => (
-            <div key={event.id} className="p-4 border rounded shadow bg-white">
-              <h3 className="text-lg font-bold">{event.name}</h3>
-              <p>{event.description}</p>
-              <p className="text-sm text-gray-500 mt-2">{event.location}</p>
-              <p className="text-sm text-gray-500">{new Date(event.startTime).toLocaleString()}</p>
-  
-              <button
-                className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                onClick={() => handlePurchase(event.id)}
-              >
-                Purchase Ticket
-              </button>
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">🎉 Available Events</h2>
+      
+          {message && (
+            <div
+              className={`mb-4 max-w-2xl mx-auto text-center px-4 py-2 rounded ${
+                message.includes('success')
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {message}
             </div>
-          ))}
+          )}
+      
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse shadow-md bg-white rounded-lg overflow-hidden">
+              <thead className="bg-indigo-600 text-white">
+                <tr>
+                  <th className="p-4 text-sm uppercase tracking-wide">Event</th>
+                  <th className="p-4 text-sm uppercase tracking-wide">Location</th>
+                  <th className="p-4 text-sm uppercase tracking-wide">Time</th>
+                  <th className="p-4 text-sm uppercase tracking-wide text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event, idx) => (
+                  <tr key={event.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="p-4 font-medium text-gray-900">{event.name}</td>
+                    <td className="p-4 text-gray-700">{event.location}</td>
+                    <td className="p-4 text-sm text-gray-500">
+                      {new Date(event.startTime).toLocaleString()}
+                    </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handlePurchase(event.id)}
+                        className="bg-emerald-600 text-white text-sm px-4 py-2 rounded hover:bg-emerald-700 transition"
+                      >
+                        Purchase
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    );
+      );
+      
   }
   
