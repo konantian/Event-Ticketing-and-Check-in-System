@@ -2,39 +2,43 @@
 
 import { useEffect, useState } from 'react';
 
-export default function TicketList() {
+export default function TicketList({ refresh }) {
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState('');
 
+  const fetchTickets = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/tickets', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || 'Failed to load tickets');
+
+      setTickets(data.tickets || []);
+    } catch (err: any) {
+      setError(err.message);
+      setTickets([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/tickets', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.message || 'Failed to load tickets');
-
-        setTickets(data.tickets || []);
-      } catch (err) {
-        setError(err.message);
-        setTickets([]);
-      }
-    };
-
     fetchTickets();
-  }, []);
+  }, [refresh]); // 🔁 re-fetch when refresh changes
 
   return (
     <div className="bg-white p-6 rounded shadow-md max-w-3xl mx-auto mt-10">
       <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">🎟 My Tickets</h2>
 
-      {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 border border-red-200 rounded">
+          {error}
+        </div>
+      )}
 
       {tickets.length === 0 && !error && (
         <p className="text-center text-gray-500">You have no tickets yet.</p>

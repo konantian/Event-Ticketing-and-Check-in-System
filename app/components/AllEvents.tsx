@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-export default function AllEvents({ user, setShowLogin }) {
+export default function AllEvents({ user, setShowLogin, onTicketPurchased }) {
   const [events, setEvents] = useState([]);
   const [message, setMessage] = useState('');
 
@@ -48,6 +48,7 @@ export default function AllEvents({ user, setShowLogin }) {
         setMessage(data.message || 'Failed to purchase ticket.');
       } else {
         setMessage('✅ Ticket purchased successfully!');
+        if (onTicketPurchased) onTicketPurchased(); 
       }
     } catch (error) {
       console.error('Purchase error:', error);

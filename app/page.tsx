@@ -12,6 +12,11 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [ticketRefreshKey, setTicketRefreshKey] = useState(0);
+
+const handleTicketPurchased = () => {
+  setTicketRefreshKey((prev) => prev + 1); // 🔁 triggers re-render of TicketList
+};
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -91,13 +96,16 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* All Events - Public */}
-      <AllEvents user={user} setShowLogin={setShowLogin} />
+      <AllEvents
+        user={user}
+        setShowLogin={setShowLogin}
+        onTicketPurchased={() => setTicketRefreshKey((prev) => prev + 1)}
+      />
 
       {/* My Tickets - Attendee only */}
       {user?.role === 'Attendee' && (
         <div className="mt-10">
-          <TicketList />
+          <TicketList refresh={ticketRefreshKey} />
         </div>
       )}
 
