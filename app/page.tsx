@@ -53,8 +53,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="flex justify-between items-center mb-8 border-b pb-4">
         <div className="flex items-center gap-3">
-          <img src="/ticket-icon.png" alt="Logo" className="w-10 h-10" />
-          <h1 className="text-3xl font-extrabold text-indigo-700 tracking-tight">
+          <h1 className="text-5xl font-extrabold text-indigo-700 tracking-tight">
             🎟️ Event Ticketing System
           </h1>
         </div>
