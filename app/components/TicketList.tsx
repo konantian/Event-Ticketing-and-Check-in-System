@@ -2,8 +2,20 @@
 
 import { useEffect, useState } from 'react';
 
-export default function TicketList({ refresh }) {
-  const [tickets, setTickets] = useState([]);
+interface Ticket {
+  id: string;
+  eventId: string;
+  tier: string;
+  price: number;
+  qrCodeData: string;
+}
+
+interface TicketListProps {
+  refresh?: number;  // Optional number to trigger refresh
+}
+
+export default function TicketList({ refresh }: TicketListProps) {
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [error, setError] = useState('');
 
   const fetchTickets = async () => {

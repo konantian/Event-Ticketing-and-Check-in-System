@@ -7,8 +7,14 @@ import Register from './components/Register';
 import TicketList from './components/TicketList';
 import LogoutButton from './components/LogoutButton';
 
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
+
 export default function HomePage() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);

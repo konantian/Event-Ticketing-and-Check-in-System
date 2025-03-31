@@ -49,12 +49,12 @@ describe("Tickets API", () => {
     // Generate tokens
     organizerToken = jwt.sign(
       { userId: organizer.id.toString(), email: organizer.email, role: organizer.role },
-      process.env.JWT_SECRET || "your-secret-key"
+      process.env.JWT_SECRET
     );
 
     attendeeToken = jwt.sign(
       { userId: attendee.id.toString(), email: attendee.email, role: attendee.role },
-      process.env.JWT_SECRET || "your-secret-key"
+      process.env.JWT_SECRET
     );
 
     // Create a test event
@@ -336,7 +336,7 @@ describe("Tickets API", () => {
 
       const anotherToken = jwt.sign(
         { userId: anotherAttendee.id.toString(), email: anotherAttendee.email, role: anotherAttendee.role },
-        process.env.JWT_SECRET || "your-secret-key"
+        process.env.JWT_SECRET
       );
 
       const res = await request(serverUrl)

@@ -2,8 +2,26 @@
 
 import { useEffect, useState } from 'react';
 
-export default function AllEvents({ user, setShowLogin, onTicketPurchased }) {
-  const [events, setEvents] = useState([]);
+interface Event {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  startTime: string;
+}
+
+interface User {
+  role: string;
+}
+
+interface AllEventsProps {
+  user: User | null;
+  setShowLogin: (show: boolean) => void;
+  onTicketPurchased?: () => void;
+}
+
+export default function AllEvents({ user, setShowLogin, onTicketPurchased }: AllEventsProps) {
+  const [events, setEvents] = useState<Event[]>([]);
   const [message, setMessage] = useState('');
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 // app/components/EventForm.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 
 export default function EventForm() {
   const [name, setName] = useState('');
@@ -10,7 +10,7 @@ export default function EventForm() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage('');
     setError(false);

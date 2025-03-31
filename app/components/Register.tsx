@@ -1,14 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 
-export default function Register({ onRegisterSuccess }) {
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
+
+interface RegisterProps {
+  onRegisterSuccess: (user: User) => void;
+}
+
+export default function Register({ onRegisterSuccess }: RegisterProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage('');
     setLoading(true);

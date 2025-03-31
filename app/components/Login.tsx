@@ -1,15 +1,25 @@
 // app/components/Login.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 
-export default function Login({ onLoginSuccess }) {
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
+
+interface LoginProps {
+  onLoginSuccess: (user: User) => void;
+}
+
+export default function Login({ onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(false);
     setMessage('');
