@@ -65,12 +65,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check ticket capacity
-    const ticketCount = await prisma.ticket.count({
-      where: { eventId: Number(eventId) },
-    });
-
-    if (ticketCount >= event.capacity) {
+    // Check remaining tickets
+    if (event.remaining <= 0) {
       return NextResponse.json(
         { success: false, message: 'Event is sold out' },
         { status: 400 }
@@ -119,20 +115,29 @@ export async function POST(req: NextRequest) {
       .update(JSON.stringify(qrData))
       .digest('hex');
 
-    // Create ticket
-    const ticket = await prisma.ticket.create({
-      data: {
-        userId: Number(user.id),
-        eventId: Number(eventId),
-        price,
-        tier,
-        qrCodeData,
-        discountCodeId: discountId,
-      },
-      include: {
-        event: true,
-        discount: true,
-      },
+    // Create ticket and update remaining count in a transaction
+    const ticket = await prisma.$transaction(async (tx) => {
+      // Decrement remaining count
+      await tx.event.update({
+        where: { id: Number(eventId) },
+        data: { remaining: { decrement: 1 } },
+      });
+
+      // Create ticket
+      return await tx.ticket.create({
+        data: {
+          userId: Number(user.id),
+          eventId: Number(eventId),
+          price,
+          tier,
+          qrCodeData,
+          discountCodeId: discountId,
+        },
+        include: {
+          event: true,
+          discount: true,
+        },
+      });
     });
 
     return NextResponse.json(

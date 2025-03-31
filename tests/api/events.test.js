@@ -14,6 +14,7 @@ describe("Events API", () => {
     name: "Test Event",
     description: "A test event description",
     capacity: 100,
+    remaining: 100, // Initialize remaining to match capacity
     location: "Test Location",
     startTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
     endTime: new Date(Date.now() + 172800000).toISOString() // Day after tomorrow
@@ -110,6 +111,7 @@ describe("Events API", () => {
       expect(res.body.message).toBe("Event created successfully");
       expect(res.body.event.name).toBe(sampleEvent.name);
       expect(res.body.event.organizerId).toBe(organizer.id);
+      expect(res.body.event.remaining).toBe(sampleEvent.capacity);
     });
 
     it("should return 401 when no token is provided", async () => {

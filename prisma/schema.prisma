@@ -23,6 +23,7 @@ model Event {
   name        String
   description String
   capacity    Int
+  remaining   Int       // Track remaining tickets
   location    String
   startTime   DateTime
   endTime     DateTime

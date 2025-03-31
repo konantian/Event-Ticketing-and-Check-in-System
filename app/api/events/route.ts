@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
         name,
         description,
         capacity: Number(capacity),
+        remaining: Number(capacity),
         location,
         startTime: new Date(startTime),
         endTime: new Date(endTime),

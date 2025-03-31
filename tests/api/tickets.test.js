@@ -16,6 +16,7 @@ describe("Tickets API", () => {
     name: "Test Event",
     description: "A test event description",
     capacity: 100,
+    remaining: 100, // Initialize remaining to match capacity
     location: "Test Location",
     startTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
     endTime: new Date(Date.now() + 172800000).toISOString() // Day after tomorrow
@@ -225,18 +226,8 @@ describe("Tickets API", () => {
         data: {
           ...sampleEvent,
           organizerId: organizer.id,
-          capacity: 1
-        }
-      });
-
-      // Create a ticket to fill capacity
-      await prisma.ticket.create({
-        data: {
-          eventId: soldOutEvent.id,
-          userId: organizer.id,
-          tier: "General",
-          price: 50.0,
-          qrCodeData: "test-qr-data"
+          capacity: 1,
+          remaining: 0 // Set remaining to 0 to simulate sold out
         }
       });
 
@@ -253,6 +244,37 @@ describe("Tickets API", () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe("Event is sold out");
+    });
+
+    it("should decrement remaining tickets when purchasing a ticket", async () => {
+      // Create an event with 5 remaining tickets
+      const event = await prisma.event.create({
+        data: {
+          ...sampleEvent,
+          organizerId: organizer.id,
+          capacity: 5,
+          remaining: 5
+        }
+      });
+
+      const ticketData = {
+        eventId: event.id,
+        tier: "General"
+      };
+
+      const res = await request(serverUrl)
+        .post("/api/tickets")
+        .set("Authorization", `Bearer ${attendeeToken}`)
+        .send(ticketData);
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+
+      // Verify remaining count was decremented
+      const updatedEvent = await prisma.event.findUnique({
+        where: { id: event.id }
+      });
+      expect(updatedEvent.remaining).toBe(4);
     });
   });
 
