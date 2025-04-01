@@ -81,6 +81,7 @@ Explore relationships across tables
     - `name`: Name of the event
     - `description`: Description of the event
     - `capacity`: Maximum number of attendees
+    - `remaining`: Number of remaining tickets for the event
     - `location`: Event location
     - `startTime`: Start time of the event
     - `endTime`: End time of the event
