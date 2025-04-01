@@ -5,16 +5,13 @@ import { useEffect, useState } from 'react';
 interface Ticket {
   id: string;
   eventId: string;
+  eventName: string;
   tier: string;
   price: number;
   qrCodeData: string;
 }
 
-interface TicketListProps {
-  refresh?: number;  // Optional number to trigger refresh
-}
-
-export default function TicketList({ refresh }: TicketListProps) {
+export default function TicketList() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [error, setError] = useState('');
 
@@ -40,7 +37,7 @@ export default function TicketList({ refresh }: TicketListProps) {
 
   useEffect(() => {
     fetchTickets();
-  }, [refresh]); // 🔁 re-fetch when refresh changes
+  }, []);
 
   return (
     <div className="bg-white p-6 rounded shadow-md max-w-3xl mx-auto mt-10">
@@ -59,11 +56,11 @@ export default function TicketList({ refresh }: TicketListProps) {
       <ul className="space-y-4">
         {tickets.map((ticket) => (
           <li
-            key={ticket.id}
+            key={ticket.eventName}
             className="p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm hover:shadow transition"
           >
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold text-gray-800">Event ID: {ticket.eventId}</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Event ID: {ticket.eventName}</h3>
               <span className="text-sm text-gray-600">{ticket.tier}</span>
             </div>
             <p className="text-gray-700">Price: <strong>${ticket.price}</strong></p>
