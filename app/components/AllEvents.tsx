@@ -8,6 +8,8 @@ interface Event {
   description: string;
   location: string;
   startTime: string;
+  capacity: number;
+  remaining: number;
 }
 
 interface User {
@@ -66,7 +68,7 @@ export default function AllEvents({ user, setShowLogin, onTicketPurchased }: All
         setMessage(data.message || 'Failed to purchase ticket.');
       } else {
         setMessage('✅ Ticket purchased successfully!');
-        if (onTicketPurchased) onTicketPurchased(); 
+        if (onTicketPurchased) onTicketPurchased();
       }
     } catch (error) {
       console.error('Purchase error:', error);
@@ -101,6 +103,8 @@ export default function AllEvents({ user, setShowLogin, onTicketPurchased }: All
               <th className="p-6">Event</th>
               <th className="p-6">Description</th>
               <th className="p-6">Location</th>
+              <th className="p-6">Capacity</th>
+              <th className="p-6">Remaining</th>
               <th className="p-6">Time</th>
               <th className="p-6 text-center">Action</th>
             </tr>
@@ -111,12 +115,31 @@ export default function AllEvents({ user, setShowLogin, onTicketPurchased }: All
                 <td className="p-6 font-semibold text-gray-800">{event.name}</td>
                 <td className="p-6 text-gray-600 text-sm">{event.description}</td>
                 <td className="p-6 text-gray-700">{event.location}</td>
+                <td className="p-6 text-center">{event.capacity}</td>
+                <td className="p-6 text-center">
+                  <span
+                    className={`px-2 py-1 rounded-full text-sm font-medium ${
+                      event.remaining === 0
+                        ? 'bg-red-100 text-red-700'
+                        : event.remaining < 10
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {event.remaining}
+                  </span>
+                </td>
                 <td className="p-6 text-sm text-gray-500">
                   {new Date(event.startTime).toLocaleString()}
                 </td>
                 <td className="p-6 text-center">
                   <button
-                    className="bg-emerald-600 text-white px-5 py-2 rounded-md hover:bg-emerald-700 transition"
+                    className={`px-5 py-2 rounded-md text-white transition ${
+                      event.remaining === 0
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700'
+                    }`}
+                    disabled={event.remaining === 0}
                     onClick={() => handlePurchase(event.id)}
                   >
                     Purchase
