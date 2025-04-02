@@ -56,7 +56,7 @@ export default function TicketList() {
       <ul className="space-y-4">
         {tickets.map((ticket) => (
           <li
-            key={ticket.eventName}
+            key={ticket.id}
             className="p-4 border border-gray-200 rounded-lg bg-gray-50 shadow-sm hover:shadow transition"
           >
             <div className="flex justify-between items-center mb-2">

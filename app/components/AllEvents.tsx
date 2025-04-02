@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Event {
   id: string;
@@ -19,12 +20,12 @@ interface User {
 interface AllEventsProps {
   user: User | null;
   setShowLogin: (show: boolean) => void;
-  onTicketPurchased?: () => void;
 }
 
-export default function AllEvents({ user, setShowLogin, onTicketPurchased }: AllEventsProps) {
+export default function AllEvents({ user, setShowLogin }: AllEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [message, setMessage] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -40,7 +41,7 @@ export default function AllEvents({ user, setShowLogin, onTicketPurchased }: All
     fetchEvents();
   }, []);
 
-  const handlePurchase = async (eventId: string) => {
+  const handleRedirectToPurchase = (eventId: string) => {
     if (!user) {
       setMessage('⚠️ Please login to purchase tickets.');
       setShowLogin(true);
@@ -52,28 +53,7 @@ export default function AllEvents({ user, setShowLogin, onTicketPurchased }: All
       return;
     }
 
-    try {
-      const res = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ eventId, tier: 'General' }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.success === false) {
-        setMessage(data.message || 'Failed to purchase ticket.');
-      } else {
-        setMessage('✅ Ticket purchased successfully!');
-        if (onTicketPurchased) onTicketPurchased();
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      setMessage('An error occurred during purchase.');
-    }
+    router.push(`/purchase/${eventId}`);
   };
 
   return (
@@ -140,7 +120,7 @@ export default function AllEvents({ user, setShowLogin, onTicketPurchased }: All
                         : 'bg-emerald-600 hover:bg-emerald-700'
                     }`}
                     disabled={event.remaining === 0}
-                    onClick={() => handlePurchase(event.id)}
+                    onClick={() => handleRedirectToPurchase(event.id)}
                   >
                     Purchase
                   </button>
