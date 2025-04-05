@@ -1,5 +1,6 @@
 // app/layout.tsx
 import './styles/globals.css';
+import { Analytics } from "@vercel/analytics/react"
 
 export const metadata = {
   title: 'Event Ticketing System',
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="antialiased bg-gray-100 text-gray-800">
         {children}
+        <Analytics />
       </body>
     </html>
   );
