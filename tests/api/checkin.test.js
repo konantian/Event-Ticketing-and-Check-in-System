@@ -18,6 +18,7 @@ describe("Check-in API", () => {
     name: "Test Event",
     description: "A test event description",
     capacity: 100,
+    remaining: 100,
     location: "Test Location",
     startTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
     endTime: new Date(Date.now() + 172800000).toISOString() // Day after tomorrow
