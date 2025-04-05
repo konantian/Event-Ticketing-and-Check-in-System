@@ -6,6 +6,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import TicketList from './components/TicketList';
 import LogoutButton from './components/LogoutButton';
+import { Toaster } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 interface User {
   id: string;
@@ -56,6 +58,9 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-yellow-50 via-sky-50 to-pink-50 px-6 py-4">
+      {/* Toast provider */}
+      <Toaster position="top-right" />
+      
       {/* Header */}
       <header className="flex justify-between items-center mb-8 border-b pb-4">
         <div className="flex items-center gap-3">
@@ -74,24 +79,23 @@ export default function HomePage() {
             </>
           ) : (
             <>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowLogin(true);
                   setShowRegister(false);
                 }}
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
               >
                 Login
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowRegister(true);
                   setShowLogin(false);
                 }}
-                className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition"
               >
                 Register
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -111,14 +115,28 @@ export default function HomePage() {
 
       {/* Auth Forms */}
       {!user && showLogin && (
-        <div className="mt-10">
-          <Login onLoginSuccess={setUser} />
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-md w-full">
+            <Login onLoginSuccess={setUser} />
+            <div className="p-4 text-center bg-gray-50">
+              <Button variant="ghost" onClick={() => setShowLogin(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
       {!user && showRegister && (
-        <div className="mt-10">
-          <Register onRegisterSuccess={setUser} />
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-md w-full">
+            <Register onRegisterSuccess={setUser} />
+            <div className="p-4 text-center bg-gray-50">
+              <Button variant="ghost" onClick={() => setShowRegister(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </main>
