@@ -1,4 +1,3 @@
-// app/components/Register.tsx
 "use client";
 
 import React, { useState } from 'react';
@@ -36,7 +35,7 @@ function Register({ onRegisterSuccess }: RegisterProps) {
     
     try {
       // Connect to backend API for registration
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, role }),

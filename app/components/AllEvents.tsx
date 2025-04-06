@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, Users2Icon } from "lucide-react";
 import { toast } from 'sonner';
 import EventForm from './EventForm';
@@ -16,16 +15,21 @@ interface User {
 }
 
 interface Event {
-  id: string;
+  id: number;
   name: string;
-  description?: string;
-  category?: string;
-  location?: string;
-  date?: string;
-  time?: string;
-  capacity?: number;
-  price?: number;
-  attendees?: Array<any>;
+  description: string;
+  capacity: number;
+  remaining: number;
+  location: string;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  updatedAt: string;
+  organizerId: number;
+  organizer: {
+    id: number;
+    email: string;
+  };
 }
 
 interface AllEventsProps {
@@ -34,42 +38,44 @@ interface AllEventsProps {
 
 function AllEvents({ user }: AllEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await fetch('/api/events');
-
         if (!response.ok) {
-          throw new Error('Failed to fetch events');
+          throw new Error(`Failed to fetch events: ${response.status}`);
         }
-
         const data = await response.json();
 
-        // Remove duplicate events by filtering based on event ID
-        let uniqueEvents: Event[] = [];
-        if (data.events && Array.isArray(data.events)) {
-          uniqueEvents = Array.from(
-            new Map(
-              data.events
-                .filter((event: any) => event && event.id && event.name)
-                .map((event: any) => [event.id, {
-                  id: event.id,
-                  name: event.name,
-                  description: event.description,
-                  category: event.category,
-                  location: event.location,
-                  date: event.date || event.startTime,
-                  time: event.time,
-                  capacity: event.capacity,
-                  price: event.price,
-                  attendees: event.attendees,
-                } as Event])
-            ).values()
-          );
-        }
+        // Type Guard to ensure each event has the required properties
+        const isEvent = (obj: any): obj is Event =>
+          obj &&
+          typeof obj.id === 'number' &&
+          typeof obj.name === 'string' &&
+          typeof obj.description === 'string' &&
+          typeof obj.capacity === 'number' &&
+          typeof obj.remaining === 'number' &&
+          typeof obj.location === 'string' &&
+          typeof obj.startTime === 'string' &&
+          typeof obj.endTime === 'string' &&
+          typeof obj.createdAt === 'string' &&
+          typeof obj.updatedAt === 'string' &&
+          typeof obj.organizerId === 'number' &&
+          obj.organizer &&
+          typeof obj.organizer.id === 'number' &&
+          typeof obj.organizer.email === 'string';
+
+        const eventsData = (data.events || []) as unknown[];
+        const uniqueEvents: Event[] = Array.from(
+          new Map(
+            eventsData
+              .filter(isEvent) // Validate each item
+              .map((event) => [event.id, event])
+          ).values()
+        );
+
         setEvents(uniqueEvents);
       } catch (error: any) {
         console.error('Error fetching events:', error);
@@ -78,9 +84,9 @@ function AllEvents({ user }: AllEventsProps) {
         setIsLoading(false);
       }
     };
-
     fetchEvents();
   }, []);
+
 
   const handlePurchaseTicket = async (eventId: string) => {
     if (!user) {
@@ -194,18 +200,18 @@ function AllEvents({ user }: AllEventsProps) {
                         </div>
                         <div className="flex items-center text-sm">
                           <CalendarIcon className="w-5 h-5 mr-2 text-blue-500" />
-                          <p>{formatDate(event.date)}</p>
+                          <p>{formatDate(event.startTime)}</p>
                         </div>
                         <div className="flex items-center text-sm">
                           <Users2Icon className="w-5 h-5 mr-2 text-orange-500" />
-                          <p>{event.attendees?.length || 0} people</p>
+                          <p>{event.remaining} people</p>
                         </div>
                         <div className="flex items-center text-sm">
                           <div className="w-5 h-5 mr-2 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">$</div>
-                          <p>${event.price || 10}</p>
+                          <p>${event.capacity}</p>
                         </div>
                       </div>
-                      <Button className={`w-full ${!user ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : user.role === 'Organizer' ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'}`} onClick={() => handlePurchaseTicket(event.id)} disabled={user?.role === 'Organizer'}>
+                      <Button className={`w-full ${!user ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : user.role === 'Organizer' ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'}`} onClick={() => handlePurchaseTicket(event.id.toString())} disabled={user?.role === 'Organizer'}>
                         {!user ? 'Login to Purchase' : user.role === 'Organizer' ? 'Cannot Purchase (Organizer)' : 'Purchase Ticket'}
                       </Button>
                     </CardContent>

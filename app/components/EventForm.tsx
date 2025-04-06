@@ -10,14 +10,10 @@ interface Event {
   id: string;
   name: string;
   description?: string;
-  category?: string;
   location?: string;
-  date?: string;
-  time?: string;
+  startTime?: string;
   capacity?: number;
-  price?: number;
-  attendees?: Array<any>;
-  picture?: string;
+  remaining?: number;
 }
 
 interface EventFormProps {
@@ -29,6 +25,8 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [capacity, setCapacity] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [startTime, setStartTime] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +41,7 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ name, description, capacity: parseInt(capacity) || 0 }),
+        body: JSON.stringify({ name, description, capacity: parseInt(capacity) || 0, location, startTime }),
       });
       
       const data = await response.json();
@@ -63,6 +61,8 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
       setName('');
       setDescription('');
       setCapacity('');
+      setLocation('');
+      setStartTime('');
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong');
       console.error('Event creation error:', error);
@@ -112,6 +112,30 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
               placeholder="Enter maximum capacity"
               value={capacity}
               onChange={(e) => setCapacity(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="location" className="text-sm font-medium">Location</label>
+            <Input
+              id="location"
+              type="text"
+              placeholder="Enter location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="startTime" className="text-sm font-medium">Start Time</label>
+            <Input
+              id="startTime"
+              type="datetime-local"
+              placeholder="Enter start time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
               required
               disabled={isLoading}
             />
