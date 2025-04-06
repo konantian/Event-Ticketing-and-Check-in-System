@@ -1,135 +1,223 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, MapPinIcon, Users2Icon } from "lucide-react";
+import { toast } from 'sonner';
+import EventForm from './EventForm';
+
+// TypeScript interfaces for props and data
+interface User {
+  id: string;
+  email: string;
+  role: string;
+}
 
 interface Event {
   id: string;
   name: string;
-  description: string;
-  location: string;
-  startTime: string;
-  capacity: number;
-  remaining: number;
-}
-
-interface User {
-  role: string;
+  description?: string;
+  category?: string;
+  location?: string;
+  date?: string;
+  time?: string;
+  capacity?: number;
+  price?: number;
+  attendees?: Array<any>;
 }
 
 interface AllEventsProps {
   user: User | null;
-  setShowLogin: (show: boolean) => void;
 }
 
-export default function AllEvents({ user, setShowLogin }: AllEventsProps) {
+function AllEvents({ user }: AllEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [message, setMessage] = useState('');
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch('/api/events');
-        const data = await res.json();
-        setEvents(data.events || []);
-      } catch (err) {
-        console.error('Failed to fetch events:', err);
-        setMessage('Failed to load events.');
+        const response = await fetch('/api/events');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+
+        const data = await response.json();
+
+        // Remove duplicate events by filtering based on event ID
+        let uniqueEvents: Event[] = [];
+        if (data.events && Array.isArray(data.events)) {
+          uniqueEvents = Array.from(
+            new Map(
+              data.events
+                .filter((event: any) => event && event.id && event.name)
+                .map((event: any) => [event.id, {
+                  id: event.id,
+                  name: event.name,
+                  description: event.description,
+                  category: event.category,
+                  location: event.location,
+                  date: event.date || event.startTime,
+                  time: event.time,
+                  capacity: event.capacity,
+                  price: event.price,
+                  attendees: event.attendees,
+                } as Event])
+            ).values()
+          );
+        }
+        setEvents(uniqueEvents);
+      } catch (error: any) {
+        console.error('Error fetching events:', error);
+        toast.error('Failed to load events');
+      } finally {
+        setIsLoading(false);
       }
     };
+
     fetchEvents();
   }, []);
 
-  const handleRedirectToPurchase = (eventId: string) => {
+  const handlePurchaseTicket = async (eventId: string) => {
     if (!user) {
-      setMessage('⚠️ Please login to purchase tickets.');
-      setShowLogin(true);
+      toast.info('Please login to purchase tickets');
       return;
     }
 
-    if (user.role !== 'Attendee') {
-      setMessage('❌ Only attendees can purchase tickets.');
-      return;
-    }
+    try {
+      const response = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          eventId,
+          tier: 'General',
+          price: 10 // Default price, adjust as needed
+        })
+      });
 
-    router.push(`/purchase/${eventId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to purchase ticket');
+      }
+
+      toast.success('Ticket purchased successfully!');
+    } catch (error: any) {
+      console.error('Error purchasing ticket:', error);
+      toast.error(error?.message || 'Failed to purchase ticket');
+    }
   };
 
-  return (
-    <section className="max-w-7xl mx-auto px-6 py-10">
-      <h2 className="text-3xl font-bold mb-8 text-indigo-700 flex items-center gap-2">
-        🎉 Available Events
-      </h2>
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return 'TBD';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+      return 'TBD';
+    }
+  };
 
-      {message && (
-        <div
-          className={`mb-6 p-4 rounded-lg text-sm max-w-2xl ${
-            message.startsWith('✅')
-              ? 'bg-green-100 text-green-700 border border-green-200'
-              : message.startsWith('❌')
-              ? 'bg-red-100 text-red-700 border border-red-200'
-              : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-          }`}
-        >
-          {message}
+
+  return (
+    <div className="w-full max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">Exciting Events</h1>
+        <p className="text-slate-500 mt-1">Find your next adventure and secure your spot today!</p>
+        {user && user.role === 'Organizer' && (
+          <Button onClick={() => setShowCreateForm(true)} className="mt-4 md:mt-0 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">Create Event</Button>
+        )}
+      </div>
+
+      {showCreateForm && (
+        <div className="mb-8">
+          <Card className="shadow-lg border-2 border-purple-100">
+            <CardHeader className="pb-4 bg-gradient-to-r from-purple-100 to-blue-100">
+              <CardTitle>Create New Event</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EventForm onSubmit={(newEvent) => {
+                setEvents(prev => [...prev, newEvent].filter((event, index, self) => index === self.findIndex(e => e.id === event.id)));
+                setShowCreateForm(false);
+                toast.success('Event created successfully!');
+              }} onCancel={() => setShowCreateForm(false)} />
+            </CardContent>
+          </Card>
         </div>
       )}
 
-      <div className="bg-white shadow-md rounded-xl overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-indigo-600 text-white text-sm uppercase tracking-wide">
-            <tr>
-              <th className="p-6">Event</th>
-              <th className="p-6">Description</th>
-              <th className="p-6">Location</th>
-              <th className="p-6">Capacity</th>
-              <th className="p-6">Remaining</th>
-              <th className="p-6">Time</th>
-              <th className="p-6 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event, idx) => (
-              <tr key={event.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="p-6 font-semibold text-gray-800">{event.name}</td>
-                <td className="p-6 text-gray-600 text-sm">{event.description}</td>
-                <td className="p-6 text-gray-700">{event.location}</td>
-                <td className="p-6 text-center">{event.capacity}</td>
-                <td className="p-6 text-center">
-                  <span
-                    className={`px-2 py-1 rounded-full text-sm font-medium ${
-                      event.remaining === 0
-                        ? 'bg-red-100 text-red-700'
-                        : event.remaining < 10
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-700'
-                    }`}
-                  >
-                    {event.remaining}
-                  </span>
-                </td>
-                <td className="p-6 text-sm text-gray-500">
-                  {new Date(event.startTime).toLocaleString()}
-                </td>
-                <td className="p-6 text-center">
-                  <button
-                    className={`px-5 py-2 rounded-md text-white transition ${
-                      event.remaining === 0
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-700'
-                    }`}
-                    disabled={event.remaining === 0}
-                    onClick={() => handleRedirectToPurchase(event.id)}
-                  >
-                    Purchase
-                  </button>
-                </td>
-              </tr>
+      <div className="space-y-6">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[...Array(6)].map((_, index) => (
+              <Card key={index} className="overflow-hidden h-[400px] animate-pulse">
+                <CardContent className="p-4">
+                  <div className="h-6 bg-slate-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-slate-200 rounded w-full mb-2"></div>
+                  <div className="h-4 bg-slate-200 rounded w-5/6 mb-8"></div>
+                  <div className="h-4 bg-slate-200 rounded w-1/2 mb-3"></div>
+                  <div className="h-4 bg-slate-200 rounded w-2/3 mb-4"></div>
+                  <div className="h-10 bg-slate-200 rounded w-full mt-6"></div>
+                </CardContent>
+              </Card>
             ))}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <>
+            {events.length === 0 ? (
+              <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-dashed border-2 border-purple-200">
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <CalendarIcon className="h-8 w-8 text-white" />
+                  <h3 className="text-xl font-medium text-purple-700 mb-1">No events found</h3>
+                  <p className="text-gray-500 text-center max-w-md">There are no upcoming events at the moment. Check back later or create one if you're an organizer.</p>
+                  {user && user.role === 'Organizer' && <Button onClick={() => setShowCreateForm(true)} className="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">Create an Event</Button>}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {events.map((event) => (
+                  <Card key={event.id} className="border-0 shadow-lg rounded-xl">
+                    <CardContent className="p-6">
+                      <h3 className="text-2xl font-bold text-gray-800">{event.name}</h3>
+                      <p className="text-slate-600">{event.description || 'No description available.'}</p>
+                      <div className="grid grid-cols-2 gap-4 py-3">
+                        <div className="flex items-center text-sm">
+                          <MapPinIcon className="w-5 h-5 mr-2 text-purple-500" />
+                          <p>{event.location || 'TBD'}</p>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <CalendarIcon className="w-5 h-5 mr-2 text-blue-500" />
+                          <p>{formatDate(event.date)}</p>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Users2Icon className="w-5 h-5 mr-2 text-orange-500" />
+                          <p>{event.attendees?.length || 0} people</p>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <div className="w-5 h-5 mr-2 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">$</div>
+                          <p>${event.price || 10}</p>
+                        </div>
+                      </div>
+                      <Button className={`w-full ${!user ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : user.role === 'Organizer' ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'}`} onClick={() => handlePurchaseTicket(event.id)} disabled={user?.role === 'Organizer'}>
+                        {!user ? 'Login to Purchase' : user.role === 'Organizer' ? 'Cannot Purchase (Organizer)' : 'Purchase Ticket'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </section>
+    </div>
   );
 }
+
+export default AllEvents;

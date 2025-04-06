@@ -1,85 +1,146 @@
-// app/components/EventForm.tsx
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { toast } from 'sonner';
 
-export default function EventForm() {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [capacity, setCapacity] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState(false);
+interface Event {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  location?: string;
+  date?: string;
+  time?: string;
+  capacity?: number;
+  price?: number;
+  attendees?: Array<any>;
+  picture?: string;
+}
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+interface EventFormProps {
+  onSubmit?: (event: Event) => void;
+  onCancel?: () => void;
+}
+
+function EventForm({ onSubmit, onCancel }: EventFormProps) {
+  const [name, setName] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [capacity, setCapacity] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('');
-    setError(false);
-
-    const token = localStorage.getItem('token');
-    const res = await fetch('/api/events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name,
-        description,
-        capacity: parseInt(capacity),
-        location: 'TBD',
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 3600000).toISOString(),
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(true);
-      setMessage(data.message || 'Failed to create event');
-    } else {
-      setMessage('Event created successfully!');
+    setIsLoading(true);
+    
+    try {
+      // Connect to backend API for event creation
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ name, description, capacity: parseInt(capacity) || 0 }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create event');
+      }
+      
+      toast.success('Event created successfully!');
+      
+      // If an onSubmit callback was provided, call it with the new event
+      if (onSubmit && data.event) {
+        onSubmit(data.event);
+      }
+      
+      // Reset form
       setName('');
       setDescription('');
       setCapacity('');
+    } catch (error: any) {
+      toast.error(error.message || 'Something went wrong');
+      console.error('Event creation error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow-md max-w-md mx-auto mb-10">
-      <h2 className="text-2xl font-bold mb-4 text-center">Create Event</h2>
-
-      {message && (
-        <div className={`mb-4 p-3 rounded ${error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-          {message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Event Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border p-3 rounded"
-        />
-        <textarea
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full border p-3 rounded"
-        />
-        <input
-          type="number"
-          placeholder="Capacity"
-          value={capacity}
-          onChange={(e) => setCapacity(e.target.value)}
-          className="w-full border p-3 rounded"
-        />
-        <button type="submit" className="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600">
-          Create Event
-        </button>
-      </form>
-    </div>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">Create Event</CardTitle>
+        <CardDescription>Fill out the form below to create a new event</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="name" className="text-sm font-medium">Event Name</label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter event name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="description" className="text-sm font-medium">Description</label>
+            <textarea
+              id="description"
+              placeholder="Enter event description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="capacity" className="text-sm font-medium">Capacity</label>
+            <Input
+              id="capacity"
+              type="number"
+              placeholder="Enter maximum capacity"
+              value={capacity}
+              onChange={(e) => setCapacity(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="flex gap-2 mt-6">
+            {onCancel && (
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={onCancel}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button 
+              type="submit" 
+              className="flex-1" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating...' : 'Create Event'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
+
+export default EventForm; 

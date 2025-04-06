@@ -1,35 +1,36 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { toast } from 'sonner';
 
-export default function LogoutButton({ onLogout }: { onLogout?: () => void }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  const handleLogout = async () => {
-    setLoading(true);
-
-    // Optional: call backend (can be expanded later for server-side session clearing)
-    await fetch('/api/logout', { method: 'POST' });
-
-    // Clear token
-    localStorage.removeItem('token');
-
-    // Trigger any logout handler (like clearing user state)
-    if (onLogout) onLogout();
-
-    // Optionally reload or redirect to home
-    router.refresh(); // or router.push('/login');
+function LogoutButton({ onLogout }) {
+  const handleLogout = () => {
+    try {
+      // Remove token from localStorage
+      localStorage.removeItem('token');
+      
+      // Call the onLogout callback if provided
+      if (onLogout) {
+        onLogout();
+      }
+      
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out');
+    }
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleLogout}
-      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-      disabled={loading}
     >
-      {loading ? 'Logging out...' : 'Logout'}
-    </button>
+      Logout
+    </Button>
   );
 }
+
+export default LogoutButton; 

@@ -1,6 +1,11 @@
-'use client';
+// app/components/Register.tsx
+"use client";
 
-import { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -12,88 +17,129 @@ interface RegisterProps {
   onRegisterSuccess: (user: User) => void;
 }
 
-export default function Register({ onRegisterSuccess }: RegisterProps) {
+function Register({ onRegisterSuccess }: RegisterProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('Attendee');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage('');
-    setLoading(true);
-
+    
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      const res = await fetch('/api/register', {
+      // Connect to backend API for registration
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          role: 'Attendee', // 👈 Only allow Attendees to register from public UI
-        }),
+        body: JSON.stringify({ email, password, role }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setMessage(data.message || 'Registration failed.');
-      } else {
-        // Auto-login after registration
-        const loginRes = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const loginData = await loginRes.json();
-        if (loginRes.ok && loginData.token) {
-          localStorage.setItem('token', loginData.token);
-          onRegisterSuccess(loginData.user);
-        } else {
-          setMessage('Registered, but login failed. Please try to log in.');
-        }
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
       }
-    } catch (err) {
-      console.error('Register error:', err);
-      setMessage('Something went wrong. Please try again.');
+      
+      // Store token in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      
+      toast.success('Registration successful!');
+      
+      // Call the onRegisterSuccess callback if provided
+      if (onRegisterSuccess && data.user) {
+        onRegisterSuccess(data.user);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Something went wrong');
+      console.error('Registration error:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow max-w-md mx-auto mt-6">
-      <h2 className="text-xl font-bold mb-4 text-center">Register as Attendee</h2>
-
-      {message && <div className="mb-4 text-sm text-red-600 text-center">{message}</div>}
-
-      <form onSubmit={handleRegister} className="space-y-4">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          required
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
-        >
-          {loading ? 'Registering...' : 'Register'}
-        </button>
-      </form>
-    </div>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+        <CardDescription className="text-center">Enter your details to sign up</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="role" className="text-sm font-medium">Role</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full p-2 rounded-md border border-input bg-background"
+              disabled={isLoading}
+            >
+              <option value="Attendee">Attendee</option>
+              <option value="Organizer">Organizer</option>
+              <option value="Staff">Staff</option>
+            </select>
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Registering...' : 'Register'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
+
+export default Register; 
