@@ -150,7 +150,11 @@ function AllEvents({ user }: AllEventsProps) {
             </CardHeader>
             <CardContent>
               <EventForm onSubmit={(newEvent) => {
-                setEvents(prev => [...prev, newEvent].filter((event, index, self) => index === self.findIndex(e => e.id === event.id)));
+                // Cast to unknown first and then to Event to avoid direct type conversion errors
+                const typedNewEvent = newEvent as unknown as Event;
+                setEvents(prev => [...prev, typedNewEvent].filter((event, index, self) => 
+                  index === self.findIndex(e => e.id === event.id)
+                ));
                 setShowCreateForm(false);
                 toast.success('Event created successfully!');
               }} onCancel={() => setShowCreateForm(false)} />
