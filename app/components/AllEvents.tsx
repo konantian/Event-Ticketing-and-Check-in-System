@@ -7,7 +7,6 @@ import { CalendarIcon, MapPinIcon, Users2Icon } from "lucide-react";
 import { toast } from 'sonner';
 import EventForm from './EventForm';
 
-// TypeScript interfaces for props and data
 interface User {
   id: string;
   email: string;
@@ -40,16 +39,14 @@ function AllEvents({ user }: AllEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await fetch('/api/events');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch events: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch events: ${response.status}`);
         const data = await response.json();
 
-        // Type Guard to ensure each event has the required properties
         const isEvent = (obj: any): obj is Event =>
           obj &&
           typeof obj.id === 'number' &&
@@ -69,11 +66,7 @@ function AllEvents({ user }: AllEventsProps) {
 
         const eventsData = (data.events || []) as unknown[];
         const uniqueEvents: Event[] = Array.from(
-          new Map(
-            eventsData
-              .filter(isEvent) // Validate each item
-              .map((event) => [event.id, event])
-          ).values()
+          new Map(eventsData.filter(isEvent).map(event => [event.id, event])).values()
         );
 
         setEvents(uniqueEvents);
@@ -84,9 +77,34 @@ function AllEvents({ user }: AllEventsProps) {
         setIsLoading(false);
       }
     };
+
     fetchEvents();
   }, []);
 
+  const isOrganizer = user?.role === 'Organizer';
+  const isLoggedIn = !!user;
+
+  const getButtonClasses = (user: User | null) => {
+    const base = 'w-full text-black hover:text-white hover:bg-white/30';
+    if (!user) {
+      // Guest: blue-purple gradient
+      return `${base} bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600`;
+    } else if (user.role === 'Organizer') {
+      // Organizer: gray button
+      return `${base} bg-slate-100 hover:bg-white/30`;
+    } else {
+      // Regular user: purple-pink gradient
+      return `${base} bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600`;
+    }
+  };
+  
+  
+
+  const getButtonText = (user: User | null) => {
+    if (!user) return 'Login to Purchase';
+    if (user.role === 'Organizer') return 'Cannot Purchase (Organizer)';
+    return 'Purchase Ticket';
+  };
 
   const handlePurchaseTicket = async (eventId: string) => {
     if (!user) {
@@ -104,15 +122,12 @@ function AllEvents({ user }: AllEventsProps) {
         body: JSON.stringify({
           eventId,
           tier: 'General',
-          price: 10 // Default price, adjust as needed
+          price: 10
         })
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to purchase ticket');
-      }
+      if (!response.ok) throw new Error(data.message || 'Failed to purchase ticket');
 
       toast.success('Ticket purchased successfully!');
     } catch (error: any) {
@@ -131,14 +146,15 @@ function AllEvents({ user }: AllEventsProps) {
     }
   };
 
-
   return (
     <div className="w-full max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">Exciting Events</h1>
         <p className="text-slate-500 mt-1">Find your next adventure and secure your spot today!</p>
         {user && user.role === 'Organizer' && (
-          <Button onClick={() => setShowCreateForm(true)} className="mt-4 md:mt-0 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">Create Event</Button>
+          <Button onClick={() => setShowCreateForm(true)} className="mt-4 md:mt-0 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+            Create Event
+          </Button>
         )}
       </div>
 
@@ -149,15 +165,17 @@ function AllEvents({ user }: AllEventsProps) {
               <CardTitle>Create New Event</CardTitle>
             </CardHeader>
             <CardContent>
-              <EventForm onSubmit={(newEvent) => {
-                // Cast to unknown first and then to Event to avoid direct type conversion errors
-                const typedNewEvent = newEvent as unknown as Event;
-                setEvents(prev => [...prev, typedNewEvent].filter((event, index, self) => 
-                  index === self.findIndex(e => e.id === event.id)
-                ));
-                setShowCreateForm(false);
-                toast.success('Event created successfully!');
-              }} onCancel={() => setShowCreateForm(false)} />
+              <EventForm
+                onSubmit={(newEvent) => {
+                  const typedNewEvent = newEvent as unknown as Event;
+                  setEvents(prev => [...prev, typedNewEvent].filter((event, index, self) =>
+                    index === self.findIndex(e => e.id === event.id)
+                  ));
+                  setShowCreateForm(false);
+                  toast.success('Event created successfully!');
+                }}
+                onCancel={() => setShowCreateForm(false)}
+              />
             </CardContent>
           </Card>
         </div>
@@ -186,8 +204,14 @@ function AllEvents({ user }: AllEventsProps) {
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <CalendarIcon className="h-8 w-8 text-white" />
                   <h3 className="text-xl font-medium text-purple-700 mb-1">No events found</h3>
-                  <p className="text-gray-500 text-center max-w-md">There are no upcoming events at the moment. Check back later or create one if you're an organizer.</p>
-                  {user && user.role === 'Organizer' && <Button onClick={() => setShowCreateForm(true)} className="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">Create an Event</Button>}
+                  <p className="text-gray-500 text-center max-w-md">
+                    There are no upcoming events at the moment. Check back later or create one if you're an organizer.
+                  </p>
+                  {user && user.role === 'Organizer' && (
+                    <Button onClick={() => setShowCreateForm(true)} className="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                      Create an Event
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ) : (
@@ -215,8 +239,12 @@ function AllEvents({ user }: AllEventsProps) {
                           <p>${event.capacity}</p>
                         </div>
                       </div>
-                      <Button className={`w-full ${!user ? 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600' : user.role === 'Organizer' ? 'bg-slate-100 text-slate-500 hover:bg-slate-200' : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'}`} onClick={() => handlePurchaseTicket(event.id.toString())} disabled={user?.role === 'Organizer'}>
-                        {!user ? 'Login to Purchase' : user.role === 'Organizer' ? 'Cannot Purchase (Organizer)' : 'Purchase Ticket'}
+                      <Button
+                        className={getButtonClasses(user)}
+                        onClick={() => handlePurchaseTicket(event.id.toString())}
+                        disabled={isOrganizer}
+                      >
+                        {getButtonText(user)}
                       </Button>
                     </CardContent>
                   </Card>
