@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CalendarIcon, MapPinIcon, Users2Icon, Ticket } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ interface AllEventsProps {
 export default function AllEvents({ user }: AllEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -56,22 +58,18 @@ export default function AllEvents({ user }: AllEventsProps) {
 
   const isOrganizer = user?.role === "Organizer";
 
-  const getButtonText = () => {
-    if (!user) return "Login to Purchase";
-    if (isOrganizer) return "Cannot Purchase (Organizer)";
-    return "Purchase Ticket";
-  };
-
-  const handlePurchase = (id: string) => {
+  const handlePurchase = (eventId: number) => {
     if (!user) {
       toast.info("Please login to purchase tickets.");
       return;
     }
+
     if (isOrganizer) {
       toast.error("Organizers cannot purchase tickets.");
       return;
     }
-    toast.success("Ticket purchase logic would go here.");
+
+    router.push(`/purchase/${eventId}`);
   };
 
   const formatDate = (date: string) =>
@@ -80,8 +78,6 @@ export default function AllEvents({ user }: AllEventsProps) {
       day: "numeric",
       year: "numeric",
     });
-
-  const buttonClasses = "w-full text-black hover:text-white hover:bg-white/30 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600";
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-10">
@@ -144,11 +140,15 @@ export default function AllEvents({ user }: AllEventsProps) {
                   </div>
                 </div>
                 <Button
-                  className={buttonClasses}
-                  onClick={() => handlePurchase(event.id.toString())}
+                  className="w-full text-black hover:text-white hover:bg-white/30 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  onClick={() => handlePurchase(event.id)}
                   disabled={isOrganizer}
                 >
-                  {getButtonText()}
+                  {!user
+                    ? "Login to Purchase"
+                    : isOrganizer
+                    ? "Cannot Purchase (Organizer)"
+                    : "Purchase Ticket"}
                 </Button>
               </CardContent>
             </Card>
