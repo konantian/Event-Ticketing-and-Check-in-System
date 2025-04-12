@@ -20,11 +20,11 @@ function Login({ onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Add error state
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null); // Clear any previous errors
+    setError(null);
     setIsLoading(true);
 
     try {
@@ -36,8 +36,7 @@ function Login({ onLoginSuccess }: LoginProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = errorData.message || `Login failed with status ${response.status}`;
-        throw new Error(errorMessage);
+        throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
@@ -45,9 +44,8 @@ function Login({ onLoginSuccess }: LoginProps) {
       toast.success('Login successful!');
       onLoginSuccess(data.user);
     } catch (error: any) {
-      setError(error.message); // Set the error message in state
+      setError(error.message || 'Something went wrong');
       toast.error(error.message || 'Something went wrong');
-      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -55,9 +53,9 @@ function Login({ onLoginSuccess }: LoginProps) {
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
+      <CardHeader className="space-y-1 mb-4">
         <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-        <CardDescription className="text-center">Enter your credentials to access your account</CardDescription>
+        <CardDescription className="text-center text-gray-500">Enter your credentials to access your account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,7 +83,7 @@ function Login({ onLoginSuccess }: LoginProps) {
               disabled={isLoading}
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>} {/* Display error message */}
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Login'}
           </Button>

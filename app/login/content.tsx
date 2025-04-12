@@ -1,0 +1,31 @@
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import Login from "../components/Login";
+import { toast } from "sonner";
+
+export default function LoginPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [redirect, setRedirect] = useState("/events");
+
+  useEffect(() => {
+    const param = searchParams.get("redirect");
+    if (param) setRedirect(param);
+  }, [searchParams]);
+
+  const handleLoginSuccess = (user: any) => {
+    toast.success("Login successful!");
+    router.push(redirect);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md bg-white shadow-xl rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-center mb-4">Login</h1>
+        <Login onLoginSuccess={handleLoginSuccess} />
+      </div>
+    </div>
+  );
+}
