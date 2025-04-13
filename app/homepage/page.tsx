@@ -32,14 +32,11 @@ interface Event {
   };
 }
 
-interface AllEventsProps {
-  user: User | null;
-}
-
-export default function AllEvents({ user }: AllEventsProps) {
+export default function AllEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const user: User | null = null; // Replace with actual user state management
 
   useEffect(() => {
     const fetchEvents = async () => {

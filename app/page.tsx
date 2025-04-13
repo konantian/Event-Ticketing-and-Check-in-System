@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AllEvents from './components/AllEvents';
+import AllEvents from './homepage/page';
 import TicketList from './components/TicketList';
 import LogoutButton from './components/LogoutButton';
 import { Toaster } from 'sonner';
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Menu, Ticket, CalendarDays, User, LogOut } from 'lucide-react';
 import AuthForms from './components/AuthForms';
+import Link from "next/link";
 
 interface User {
   id: string;
@@ -204,7 +205,7 @@ export default function HomePage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {user ? (
           <>
-            <AllEvents user={user} />
+            <AllEvents />
 
             {/* My Tickets - Attendee only */}
             {user?.role === 'Attendee' && (
@@ -215,8 +216,13 @@ export default function HomePage() {
           </>
         ) : (
           <>
-            <AllEvents user={user} />
+            <AllEvents />
             <AuthForms onLoginSuccess={handleLoginSuccess} onRegisterSuccess={handleRegisterSuccess} />
+            <div className="text-center mt-4">
+              <Link href="/">
+                <Button variant="outline">Return to Home Page</Button>
+              </Link>
+            </div>
           </>
         )}
       </div>
