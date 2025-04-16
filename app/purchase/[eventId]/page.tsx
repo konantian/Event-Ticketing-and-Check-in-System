@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 export default function PurchasePage() {
   const { eventId } = useParams();
+  const router = useRouter();
   const [event, setEvent] = useState<any>(null);
   const [tier, setTier] = useState('General');
   const [discountCode, setDiscountCode] = useState('');
@@ -50,6 +51,18 @@ export default function PurchasePage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setMessage('🎉 Ticket purchased successfully!');
+
+        // Fetch updated event data to reflect remaining tickets
+        const updatedRes = await fetch(`/api/events/${eventId}`);
+        const updatedData = await updatedRes.json();
+        if (updatedRes.ok) {
+          setEvent(updatedData.event);
+        }
+
+        // Delay for 2 seconds before redirecting to My Tickets page
+        setTimeout(() => {
+          router.push('/my-tickets');
+        }, 2000);
       } else {
         setMessage(data.message || 'Something went wrong');
       }

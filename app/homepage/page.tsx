@@ -97,7 +97,7 @@ export default function AllEvents() {
 
   const isOrganizer = user?.role === "Organizer";
 
-  const handlePurchase = (eventId: number) => {
+  const handlePurchase = async (eventId: number) => {
     if (!user) {
       toast.info("Please login to purchase tickets.");
       return;
@@ -108,7 +108,33 @@ export default function AllEvents() {
       return;
     }
 
-    router.push(`/purchase/${eventId}`);
+    try {
+      const response = await fetch(`/api/tickets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          eventId,
+          tier: 'General', // Example tier
+          discountCode: null // Add discount code if applicable
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to purchase ticket');
+      }
+
+      const data = await response.json();
+      toast.success("Ticket purchased successfully!");
+
+      // Redirect to the My Tickets page
+      router.push("/my-tickets");
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error(error.message || 'Failed to purchase ticket');
+    }
   };
 
   const formatDate = (date: string) =>
