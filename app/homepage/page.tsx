@@ -32,11 +32,20 @@ interface Event {
   };
 }
 
+interface Ticket {
+  id: number;
+  eventId: number;
+  userId: string;
+  tier: string;
+  createdAt: string;
+}
+
 export default function AllEvents() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const user: User | null = null; // Replace with actual user state management
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -52,6 +61,39 @@ export default function AllEvents() {
     };
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/user', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        if (res.ok && data.user) {
+          setUser(data.user);
+          fetchUserTickets(data.user.id); // Fetch tickets after setting user
+        }
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const fetchUserTickets = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/tickets?userId=${userId}`);
+      const data = await response.json();
+      setTickets(data.tickets || []);
+    } catch (err) {
+      toast.error("Failed to load tickets.");
+    }
+  };
 
   const isOrganizer = user?.role === "Organizer";
 
@@ -76,6 +118,32 @@ export default function AllEvents() {
       year: "numeric",
     });
 
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      setUser(data.user);
+    } catch (error) {
+      console.error('Login error:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    toast.success("Logged out successfully.");
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -97,15 +165,26 @@ export default function AllEvents() {
               </Link>
             </>
           ) : (
-            <Link href="/my-tickets">
-              <Button variant="secondary" className="flex items-center gap-2">
-                <Ticket className="w-4 h-4" />
-                View My Tickets
+            <div className="flex items-center gap-3">
+              <Link href="/my-tickets">
+                <Button variant="secondary" className="flex items-center gap-2">
+                  <Ticket className="w-4 h-4" />
+                  View My Tickets
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={handleLogout}>
+                Logout
               </Button>
-            </Link>
+            </div>
           )}
         </div>
       </div>
+
+      {user ? (
+        <p>Welcome, {user.email}</p>
+      ) : (
+        <p>Please log in.</p>
+      )}
 
       {isLoading ? (
         <p className="text-center text-slate-500">Loading events...</p>
@@ -150,6 +229,24 @@ export default function AllEvents() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Display User Tickets */}
+      {user && tickets.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold">Your Tickets</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {tickets.map((ticket) => (
+              <Card key={ticket.id} className="border-0 shadow-md rounded-xl">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold">Ticket for Event ID: {ticket.eventId}</h3>
+                  <p>Tier: {ticket.tier}</p>
+                  <p>Purchased On: {formatDate(ticket.createdAt)}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
     </div>
