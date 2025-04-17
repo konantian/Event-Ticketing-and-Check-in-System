@@ -86,14 +86,6 @@ export default function PurchasePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-gray-800 text-white py-12 px-6">
       <div className="max-w-2xl mx-auto">
-        <div className="flex justify-end mb-4">
-          <Link href="/homepage">
-            <button className="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Homepage
-            </button>
-          </Link>
-        </div>
         <div className="bg-white text-gray-800 shadow-lg rounded-xl p-8">
           <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-indigo-700">
             🎟 Complete Your Ticket Purchase

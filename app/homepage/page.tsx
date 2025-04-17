@@ -46,15 +46,17 @@ export default function HomepageEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const router = useRouter();
 
   // Check if user is authenticated
   useEffect(() => {
     const fetchUser = async () => {
+      setIsAuthLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
-        setIsLoading(false);
+        setIsAuthLoading(false);
         return;
       }
 
@@ -71,7 +73,7 @@ export default function HomepageEvents() {
         console.error('Failed to fetch user:', err);
       }
 
-      setIsLoading(false);
+      setIsAuthLoading(false);
     };
 
     fetchUser();
@@ -194,29 +196,38 @@ export default function HomepageEvents() {
       <div className="container w-full max-w-7xl mx-auto px-4 py-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2">
           <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
-              Exciting Events
-            </h1>
             <p className="text-slate-500 mt-1">Find your next adventure!</p>
           </div>
 
-          <div className="flex gap-3 mt-2 md:mt-0">
-            {!user ? (
-              <>
+          <div className="flex gap-5 mt-2 md:mt-0">
+            {isAuthLoading ? (
+              // Show loading indicator instead of login/register buttons
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-900 mr-2"></div>
+                <span className="text-sm">Loading...</span>
+              </div>
+            ) : !user ? (
+              <div className="flex space-x-8">
                 <Link href="/login">
-                  <Button variant="outline">Login</Button>
+                  <Button variant="outline" className="fancy-button-secondary group relative overflow-hidden">
+                    <span className="relative z-10 flex items-center justify-center">Login</span>
+                  </Button>
                 </Link>
                 <Link href="/register">
-                  <Button>Register</Button>
+                  <Button className="fancy-button group relative overflow-hidden">
+                    <span className="relative z-10 flex items-center justify-center">Register</span>
+                  </Button>
                 </Link>
-              </>
+              </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-8">
                 {user?.role !== 'Organizer' && (
-                  <Link href="/my-tickets">
-                    <Button variant="secondary" className="flex items-center gap-2">
-                      <Ticket className="w-4 h-4" />
-                      View My Tickets
+                  <Link href="/my-tickets" className="mr-4">
+                    <Button variant="secondary" className="fancy-button-accent group relative overflow-hidden">
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        <Ticket className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                        View My Tickets
+                      </span>
                     </Button>
                   </Link>
                 )}
@@ -224,15 +235,19 @@ export default function HomepageEvents() {
                   <Button 
                     onClick={() => setShowCreateForm(!showCreateForm)}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="fancy-button-secondary group relative overflow-hidden mr-4"
                   >
-                    <PlusCircle className="w-4 h-4" />
-                    {showCreateForm ? 'Hide Form' : 'Create Event'}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <PlusCircle className="w-4 h-4 transition-transform group-hover:scale-110" />
+                      {showCreateForm ? 'Hide Form' : 'Create Event'}
+                    </span>
                   </Button>
                 )}
-                <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
-                  <LogOut className="w-4 h-4" />
-                  Logout
+                <Button variant="outline" onClick={handleLogout} className="fancy-button-danger group relative overflow-hidden">
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    Logout
+                  </span>
                 </Button>
               </div>
             )}
@@ -258,13 +273,14 @@ export default function HomepageEvents() {
         ) : events.length === 0 ? (
           <p className="text-center text-slate-500">No events found.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-6">
             {events.map((event) => (
-              <Card key={event.id} className="border-0 shadow-md rounded-xl">
-                <CardContent className="p-6">
-                  <h3 className="text-2xl font-bold text-gray-800">{event.name}</h3>
-                  <p className="text-slate-600 mb-3">{event.description || "No description."}</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <Card key={event.id} className="border-0 shadow-md rounded-xl fancy-card overflow-hidden relative group">
+                <CardContent className="p-8">
+                  <div className="fancy-card-gradient absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                  <h3 className="text-2xl font-bold text-gray-800 relative z-10">{event.name}</h3>
+                  <p className="text-slate-600 mb-3 relative z-10">{event.description || "No description."}</p>
+                  <div className="grid grid-cols-2 gap-4 text-sm mb-4 relative z-10">
                     <div className="flex items-center">
                       <MapPinIcon className="w-5 h-5 mr-2 text-purple-500" />
                       {event.location}
@@ -283,17 +299,20 @@ export default function HomepageEvents() {
                     </div>
                   </div>
                   <Button
-                    className="w-full text-black hover:text-white hover:bg-white/30 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    className="w-full text-white font-bold py-3 px-6 fancy-ticket-button relative overflow-hidden group"
                     onClick={() => handlePurchase(event.id)}
                     disabled={isOrganizer || event.remaining <= 0}
                   >
-                    {!user
-                      ? "Login to Purchase"
-                      : isOrganizer
-                      ? "Cannot Purchase (Organizer)"
-                      : event.remaining <= 0
-                      ? "Not available to purchase"
-                      : "Purchase Ticket"}
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <Ticket className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                      {!user
+                        ? "Login to Purchase"
+                        : isOrganizer
+                        ? "Cannot Purchase (Organizer)"
+                        : event.remaining <= 0
+                        ? "Not available to purchase"
+                        : "Purchase Ticket"}
+                    </span>
                   </Button>
                 </CardContent>
               </Card>

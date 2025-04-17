@@ -29,12 +29,6 @@ export default function MyTicketsPage() {
     <div className="max-w-7xl mx-auto px-4 py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">My Tickets</h1>
-        <Link href="/homepage">
-          <Button variant="outline" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Homepage
-          </Button>
-        </Link>
       </div>
       <TicketList />
     </div>

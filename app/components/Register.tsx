@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { toast, Toaster } from 'sonner';
+import { UserPlus, Mail, Lock, CheckCircle, Users } from "lucide-react";
 
 interface User {
   id: string;
@@ -99,16 +100,20 @@ function Register({ onRegisterSuccess }: RegisterProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto fancy-card overflow-hidden relative">
+      <div className="fancy-card-gradient absolute inset-0 opacity-5"></div>
       <Toaster position="top-right" richColors closeButton />
-      <CardHeader>
+      <CardHeader className="relative z-10">
         <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
         <CardDescription className="text-center">Enter your details to sign up</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative z-10">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+              <Mail className="h-4 w-4 text-indigo-500" />
+              Email
+            </label>
             <Input
               id="email"
               type="email"
@@ -117,11 +122,15 @@ function Register({ onRegisterSuccess }: RegisterProps) {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
+              className="border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
             />
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
+              <Lock className="h-4 w-4 text-indigo-500" />
+              Password
+            </label>
             <Input
               id="password"
               type="password"
@@ -130,11 +139,15 @@ function Register({ onRegisterSuccess }: RegisterProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
+              className="border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
             />
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="text-sm font-medium flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-indigo-500" />
+              Confirm Password
+            </label>
             <Input
               id="confirmPassword"
               type="password"
@@ -142,22 +155,29 @@ function Register({ onRegisterSuccess }: RegisterProps) {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               onBlur={validateConfirmPassword}
-              className={passwordError ? "border-red-500" : ""}
+              className={`border-indigo-100 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all ${
+                passwordError ? "border-red-500 focus:border-red-500" : "focus:border-indigo-300"
+              }`}
               required
               disabled={isLoading}
             />
             {passwordError && (
-              <p className="text-red-500 text-sm mt-1">Passwords do not match</p>
+              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                <span className="text-red-500 text-xs">●</span> Passwords do not match
+              </p>
             )}
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="role" className="text-sm font-medium">Role</label>
+            <label htmlFor="role" className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4 text-indigo-500" />
+              Role
+            </label>
             <select
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="input"
+              className="w-full p-2 rounded-md border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
               required
             >
               <option value="">Select a role</option>
@@ -168,10 +188,22 @@ function Register({ onRegisterSuccess }: RegisterProps) {
           
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full fancy-button group relative overflow-hidden mt-6" 
             disabled={isLoading || passwordError}
           >
-            {isLoading ? 'Registering...' : 'Register'}
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              {isLoading ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  <span>Register</span>
+                </>
+              )}
+            </span>
           </Button>
         </form>
       </CardContent>

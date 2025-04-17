@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Ticket, Calendar, User, MapPin, Clock, QrCode, CheckCircle2, XCircle } from "lucide-react";
+import { Ticket, Calendar, User, MapPin, Clock, QrCode, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
 import { toast, Toaster } from 'sonner';
 import Link from 'next/link';
 
@@ -251,24 +251,30 @@ function TicketList() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
-        <p className="ml-3 text-indigo-600 font-medium">Loading tickets...</p>
+      <div className="flex justify-center items-center h-32 bg-white p-8 rounded-lg shadow-sm">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-100 border-t-indigo-600"></div>
+        <p className="ml-4 text-indigo-700 font-medium">Loading your tickets...</p>
       </div>
     );
   }
 
   if (tickets.length === 0) {
     return (
-      <Card className="bg-gray-50 border-dashed border-2 border-gray-200">
-        <CardContent className="flex flex-col items-center justify-center py-12">
+      <Card className="bg-gray-50 border-dashed border-2 border-gray-200 fancy-card overflow-hidden relative">
+        <div className="fancy-card-gradient absolute inset-0 opacity-3"></div>
+        <CardContent className="flex flex-col items-center justify-center py-12 relative z-10">
           <div className="rounded-full bg-gray-100 p-3 mb-4">
-            <Ticket className="h-6 w-6 text-gray-400" />
+            <Ticket className="h-6 w-6 text-indigo-500" />
           </div>
-          <p className="text-gray-500 text-lg font-medium">No tickets found</p>
-          <p className="text-gray-400 mt-1">Purchase tickets to events to see them here</p>
+          <p className="text-gray-700 text-lg font-medium">No tickets found</p>
+          <p className="text-gray-500 mt-1">Purchase tickets to events to see them here</p>
           <Link href="/homepage">
-            <Button variant="outline" className="mt-4">Browse Events</Button>
+            <Button variant="outline" className="mt-6 fancy-button-secondary group relative overflow-hidden">
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <CalendarDays className="h-4 w-4 transition-transform group-hover:scale-110" />
+                Browse Events
+              </span>
+            </Button>
           </Link>
         </CardContent>
       </Card>
@@ -284,124 +290,142 @@ function TicketList() {
           <div key={dateGroup.date}>
             <h3 className="font-semibold text-lg text-gray-700 mb-3 mt-6 border-b pb-2">{dateGroup.label}</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {tickets
                 .filter(ticket => {
                   const ticketDate = new Date(ticket.event.startTime);
                   return isSameDay(ticketDate, dateGroup.dateObj);
                 })
                 .map((ticket) => (
-                  <Card 
+                  <div 
                     key={ticket.id} 
-                    className={`overflow-hidden hover:shadow-md transition-shadow ${!ticket.checkIn ? 'border-green-400 border-2' : 'border-gray-200'}`}
+                    className={`ticket-container ${!ticket.checkIn ? 'unchecked' : ''}`}
                   >
-                    <div className="flex flex-col sm:flex-row">
-                      {/* Ticket details */}
-                      <div className="flex-grow p-4 sm:p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-bold text-xl text-gray-900">{ticket.event?.name || 'Event Name'}</h3>
-                            <div className="flex items-center text-gray-500 mt-1">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              <span>{formatDate(ticket.event?.startTime)}</span>
+                    <div className="ticket-card-wrapper">
+                      <div className="ticket-body">
+                        {/* Main ticket content */}
+                        <div className="ticket-content">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-bold text-xl text-gray-900">{ticket.event?.name || 'Event Name'}</h3>
+                              <div className="flex items-center text-gray-500 mt-1">
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span>{formatDate(ticket.event?.startTime)}</span>
+                              </div>
                             </div>
-                          </div>
-                          <Badge className={ticket.checkIn ? "bg-green-500 hover:bg-green-600" : "bg-amber-500 hover:bg-amber-600"}>
-                            {ticket.checkIn ? "Checked In" : "Not Checked In"}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>{formatTime(ticket.event?.startTime)} - {formatTime(ticket.event?.endTime)}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>{ticket.event?.location || 'Venue TBD'}</span>
-                          </div>
-                          <div className="flex items-center text-gray-600">
-                            <Ticket className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>Ticket ID: {ticket.id}</span>
-                          </div>
-                          <div className="flex items-center">
-                            {ticket.checkIn ? (
-                              <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                            ) : (
-                              <XCircle className="h-4 w-4 mr-2 text-amber-500" />
-                            )}
-                            <span className={`text-sm ${ticket.checkIn ? 'text-green-600' : 'text-amber-600'}`}>
-                              {ticket.checkIn === null ? 'Not checked in yet' : 
-                              `Checked in: ${formatCheckInTime(ticket.checkIn?.timestamp)}`}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center space-x-6">
-                            <Badge variant="outline" className="font-medium text-white bg-purple-600 border-purple-700 hover:bg-purple-700">
-                              {ticket.tier || 'General'}
+                            <Badge className={ticket.checkIn ? "bg-green-500 hover:bg-green-600" : "bg-amber-500 hover:bg-amber-600"}>
+                              {ticket.checkIn ? "Checked In" : "Not Checked In"}
                             </Badge>
-                            <span className="text-xl font-bold text-indigo-700">${ticket.price || '0'}</span>
                           </div>
                           
-                          <div className="flex space-x-2">
-                            {!ticket.checkIn && (
-                              <Button 
-                                variant="default" 
-                                size="default"
-                                className="gap-1 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-2 shadow-lg pulse-animation" 
-                                onClick={() => handleCheckIn(ticket)}
-                                disabled={checkingIn}
-                                onMouseEnter={() => setActiveTicketId(ticket.id)}
-                                onMouseLeave={() => setActiveTicketId(null)}
-                              >
-                                <CheckCircle2 className="h-5 w-5 mr-1" />
-                                {activeTicketId === ticket.id ? 'Check In Now' : 'Check In'}
-                              </Button>
-                            )}
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="gap-1" 
-                              onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
-                            >
-                              <QrCode className="h-4 w-4" />
-                              {ticket.id === showQrCode ? 'Hide' : 'View'} QR
-                            </Button>
+                          <div className="space-y-2 mb-4">
+                            <div className="flex items-center text-gray-600">
+                              <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{formatTime(ticket.event?.startTime)} - {formatTime(ticket.event?.endTime)}</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>{ticket.event?.location || 'Venue TBD'}</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <Ticket className="h-4 w-4 mr-2 text-gray-400" />
+                              <span>Ticket ID: {ticket.id}</span>
+                            </div>
+                            <div className="flex items-center">
+                              {ticket.checkIn ? (
+                                <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                              ) : (
+                                <XCircle className="h-4 w-4 mr-2 text-amber-500" />
+                              )}
+                              <span className={`text-sm ${ticket.checkIn ? 'text-green-600' : 'text-amber-600'}`}>
+                                {ticket.checkIn === null ? 'Not Checked in yet' :
+                                `Checked In: ${formatCheckInTime(ticket.checkIn?.timestamp)}`}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-6">
+                              <Badge variant="outline" className="font-medium text-white bg-purple-600 border-purple-700 hover:bg-purple-700">
+                                {ticket.tier || 'General'}
+                              </Badge>
+                              <span className="text-xl font-bold text-indigo-700">${ticket.price || '0'}</span>
+                            </div>
+                            
+                            <div className="flex space-x-2">
+                              {!ticket.checkIn && (
+                                <>
+                                  <Button 
+                                    variant="default" 
+                                    size="default"
+                                    className="fancy-button-accent group relative overflow-hidden" 
+                                    onClick={() => handleCheckIn(ticket)}
+                                    disabled={checkingIn}
+                                    onMouseEnter={() => setActiveTicketId(ticket.id)}
+                                    onMouseLeave={() => setActiveTicketId(null)}
+                                  >
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                      <CheckCircle2 className="h-5 w-5 transition-transform group-hover:scale-110" />
+                                      {activeTicketId === ticket.id ? 'Check In Now' : 'Check In'}
+                                    </span>
+                                  </Button>
+                                  
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="fancy-button-secondary group relative overflow-hidden" 
+                                    onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
+                                  >
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                      <QrCode className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                                      {ticket.id === showQrCode ? 'Hide QR' : 'View QR'}
+                                    </span>
+                                  </Button>
+                                </>
+                              )}
+
+                              {ticket.checkIn && (
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                  <span className="text-green-600 text-sm font-medium">
+                                    Checked In Successfully
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      {/* QR Code section (visible when toggled) */}
-                      {ticket.id === showQrCode && (
-                        <div className="bg-indigo-50 p-4 flex flex-col items-center justify-center border-t sm:border-t-0 sm:border-l border-indigo-100">
-                          <div className="bg-white p-2 rounded shadow-sm">
-                            <img 
-                              src={generateQrCode(ticket)} 
-                              alt="Ticket QR Code" 
-                              className="w-32 h-32"
-                            />
-                          </div>
-                          <p className="mt-2 text-xs text-center text-gray-500 max-w-[180px]">
-                            Scan with your camera app to check in
-                          </p>
-                          <p className="mt-1 text-xs text-center text-indigo-500 max-w-[180px]">
-                            Camera will open a web link to complete check-in
-                          </p>
-                          {!networkIP && typeof window !== 'undefined' && 
-                           (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                            <p className="mt-1 text-xs text-center text-red-500 max-w-[180px] font-medium">
-                              ⚠️ QR won't work on mobile! Set NEXT_PUBLIC_LOCAL_IP in .env
+                        
+                        {/* QR Code section (visible when toggled) */}
+                        {ticket.id === showQrCode && !ticket.checkIn && (
+                          <div className="ticket-stub">
+                            <div className="bg-white p-2 rounded shadow-sm">
+                              <img 
+                                src={generateQrCode(ticket)} 
+                                alt="Ticket QR Code" 
+                                className="w-32 h-32"
+                              />
+                            </div>
+                            <p className="mt-2 text-xs text-center text-gray-500 max-w-[180px]">
+                              Scan with your camera app to check in
                             </p>
-                          )}
-                          <p className="mt-1 text-xs text-center text-gray-600 font-medium max-w-[180px]">
-                            QR ID: {ticket.qrCodeData?.substring(0, 8)}...
-                          </p>
-                        </div>
-                      )}
+                            <p className="mt-1 text-xs text-center text-indigo-500 max-w-[180px]">
+                              Camera will open a web link to complete check-in
+                            </p>
+                            {!networkIP && typeof window !== 'undefined' && 
+                             (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                              <p className="mt-1 text-xs text-center text-red-500 max-w-[180px] font-medium">
+                                ⚠️ QR won't work on mobile! Set NEXT_PUBLIC_LOCAL_IP in .env
+                              </p>
+                            )}
+                            <p className="mt-1 text-xs text-center text-gray-600 font-medium max-w-[180px]">
+                              QR ID: {ticket.qrCodeData?.substring(0, 8)}...
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
             </div>
           </div>
@@ -422,6 +446,134 @@ function TicketList() {
           }
           100% {
             box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+          }
+        }
+        
+        /* Ticket design styles */
+        .ticket-container {
+          margin-bottom: 1.5rem;
+          perspective: 1000px;
+        }
+        
+        @media (min-width: 1024px) {
+          .grid-cols-3 > .ticket-container,
+          .grid-cols-4 > .ticket-container {
+            height: 100%;
+          }
+        }
+        
+        .ticket-container.unchecked {
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        .ticket-card-wrapper {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          transition: transform 0.3s ease;
+        }
+        
+        .ticket-card-wrapper:hover {
+          transform: translateY(-5px) rotateX(5deg);
+          box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ticket-body {
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          border: 1px solid #e5e7eb;
+        }
+        
+        .ticket-content {
+          position: relative;
+          padding: 1.5rem;
+          flex: 1;
+          background-color: white;
+          background-image: 
+            radial-gradient(circle at 50px 50px, rgba(99, 102, 241, 0.05) 20px, transparent 0),
+            radial-gradient(circle at 150px 150px, rgba(99, 102, 241, 0.05) 30px, transparent 0),
+            radial-gradient(circle at 250px 80px, rgba(99, 102, 241, 0.05) 25px, transparent 0);
+        }
+        
+        .ticket-content::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 5px;
+          background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+        }
+        
+        .ticket-stub {
+          padding: 1.5rem;
+          background: #f9fafb;
+          border-top: 2px dashed #e5e7eb;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+        }
+        
+        /* Scalloped edges */
+        .ticket-body::before,
+        .ticket-body::after {
+          content: "";
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          background-color: #f3f4f6;
+          border-radius: 50%;
+          z-index: 2;
+        }
+        
+        /* Left side scalloped edge */
+        .ticket-body::before {
+          left: -8px;
+          top: 50%;
+          box-shadow: 
+            0 -60px 0 #f3f4f6,
+            0 -120px 0 #f3f4f6,
+            0 -180px 0 #f3f4f6,
+            0 60px 0 #f3f4f6,
+            0 120px 0 #f3f4f6,
+            0 180px 0 #f3f4f6;
+        }
+        
+        /* Right side scalloped edge */
+        .ticket-body::after {
+          right: -8px;
+          top: 50%;
+          box-shadow: 
+            0 -60px 0 #f3f4f6,
+            0 -120px 0 #f3f4f6,
+            0 -180px 0 #f3f4f6,
+            0 60px 0 #f3f4f6,
+            0 120px 0 #f3f4f6,
+            0 180px 0 #f3f4f6;
+        }
+        
+        .ticket-content::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 10%;
+          width: 80%;
+          height: 1px;
+          background: repeating-linear-gradient(90deg, #ddd, #ddd 5px, transparent 5px, transparent 10px);
+        }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-8px);
           }
         }
       `}</style>

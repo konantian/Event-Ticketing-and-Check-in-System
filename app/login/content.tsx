@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Login from "../components/Login";
 import { toast } from "sonner";
-import Link from "next/link";
 
 export default function LoginPageContent() {
   const router = useRouter();
@@ -32,15 +31,6 @@ export default function LoginPageContent() {
       <div className="w-full max-w-md bg-white shadow-xl rounded-lg p-6">
         <h1 className="text-2xl font-bold text-center mb-4">Login</h1>
         <Login onLoginSuccess={handleLoginSuccess} />
-
-        {/* Return to Home Page Button */}
-        <div className="mt-6 text-center">
-          <Link href="/homepage">
-            <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium underline">
-              ← Back to Homepage
-            </button>
-          </Link>
-        </div>
       </div>
     </div>
   );
