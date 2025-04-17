@@ -3,9 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, ShieldAlert } from 'lucide-react';
 
 // Component that uses useSearchParams, wrapped separately
 function CheckInContent() {
@@ -35,11 +34,21 @@ function CheckInContent() {
     setError('');
     
     try {
-      // Direct check-in without token validation
+      // Check-in with token validation
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('You must be logged in as an event organizer to check in attendees');
+        toast.error('Authentication required');
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch('/api/checkin/scan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ qrCodeData: qrCode })
       });
@@ -81,7 +90,7 @@ function CheckInContent() {
           </div>
           <h3 className="text-xl font-bold text-green-600">Check-in Successful!</h3>
           <p className="text-gray-600 text-center">
-            You have been successfully checked in.
+            The attendee has been successfully checked in.
           </p>
         </div>
       ) : (
@@ -89,16 +98,21 @@ function CheckInContent() {
           {error ? (
             <>
               <div className="rounded-full bg-red-100 p-3">
-                <XCircle className="h-12 w-12 text-red-600" />
+                {error.includes('organizer') ? (
+                  <ShieldAlert className="h-12 w-12 text-red-600" />
+                ) : (
+                  <XCircle className="h-12 w-12 text-red-600" />
+                )}
               </div>
               <h3 className="text-xl font-bold text-red-600">Check-in Failed</h3>
-              <p className="text-gray-600 text-center">{error}</p>
-              <Button
-                className="mt-4"
-                onClick={() => window.location.href = '/tickets'}
-              >
-                Return to Tickets
-              </Button>
+              {(
+                <div className="bg-amber-50 p-4 rounded-md border border-amber-200 max-w-md">
+                  <p className="text-amber-800 text-sm">
+                    <strong>Note:</strong> Only event organizers can check in attendees. 
+                    If you are the organizer, please log in with your organizer account.
+                  </p>
+                </div>
+              )}
             </>
           ) : (
             <>

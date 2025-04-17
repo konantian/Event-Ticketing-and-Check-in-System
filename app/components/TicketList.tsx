@@ -30,8 +30,6 @@ function TicketList() {
   const [tickets, setTickets] = useState<TicketType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showQrCode, setShowQrCode] = useState<number | null>(null);
-  const [checkingIn, setCheckingIn] = useState(false);
-  const [activeTicketId, setActiveTicketId] = useState<number | null>(null);
   const [networkIP, setNetworkIP] = useState<string>("");
 
   // Set up local network IP notice for development
@@ -187,68 +185,6 @@ function TicketList() {
     });
   };
 
-  // Handle self check-in
-  const handleCheckIn = async (ticket: TicketType) => {
-    if (ticket.checkIn) {
-      toast.info('This ticket has already been checked in.');
-      return;
-    }
-
-    if (!ticket.qrCodeData) {
-      toast.error('No QR code data available for this ticket.');
-      return;
-    }
-
-    setCheckingIn(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Authentication required');
-        return;
-      }
-
-      const response = await fetch('/api/checkin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ qrCodeData: ticket.qrCodeData })
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Show a detailed success toast with event name
-        toast.success("Check-in successful!");
-        
-        // Add a 1-second delay to ensure users can see the toast message
-        setTimeout(() => {
-          // Update the ticket in the state
-          const updatedTickets = tickets.map(t => {
-            if (t.id === ticket.id) {
-              return {
-                ...t,
-                checkIn: {
-                  timestamp: data.checkIn.timestamp || new Date().toISOString()
-                }
-              };
-            }
-            return t;
-          });
-          setTickets(updatedTickets);
-        }, 1000);
-      } else {
-        toast.error(data.message || 'Check-in failed');
-      }
-    } catch (error) {
-      console.error('Error during check-in:', error);
-      toast.error('Something went wrong during check-in');
-    } finally {
-      setCheckingIn(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-32 bg-white p-8 rounded-lg shadow-sm">
@@ -354,34 +290,17 @@ function TicketList() {
                             
                             <div className="flex space-x-2">
                               {!ticket.checkIn && (
-                                <>
-                                  <Button 
-                                    variant="default" 
-                                    size="default"
-                                    className="fancy-button-accent group relative overflow-hidden" 
-                                    onClick={() => handleCheckIn(ticket)}
-                                    disabled={checkingIn}
-                                    onMouseEnter={() => setActiveTicketId(ticket.id)}
-                                    onMouseLeave={() => setActiveTicketId(null)}
-                                  >
-                                    <span className="relative z-10 flex items-center justify-center gap-2">
-                                      <CheckCircle2 className="h-5 w-5 transition-transform group-hover:scale-110" />
-                                      {activeTicketId === ticket.id ? 'Check In Now' : 'Check In'}
-                                    </span>
-                                  </Button>
-                                  
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="fancy-button-secondary group relative overflow-hidden" 
-                                    onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
-                                  >
-                                    <span className="relative z-10 flex items-center justify-center gap-2">
-                                      <QrCode className="h-4 w-4 transition-transform group-hover:rotate-12" />
-                                      {ticket.id === showQrCode ? 'Hide QR' : 'View QR'}
-                                    </span>
-                                  </Button>
-                                </>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="fancy-button-secondary group relative overflow-hidden" 
+                                  onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
+                                >
+                                  <span className="relative z-10 flex items-center justify-center gap-2">
+                                    <QrCode className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                                    {ticket.id === showQrCode ? 'Hide QR' : 'View QR'}
+                                  </span>
+                                </Button>
                               )}
 
                               {ticket.checkIn && (
@@ -407,11 +326,16 @@ function TicketList() {
                               />
                             </div>
                             <p className="mt-2 text-xs text-center text-gray-500 max-w-[180px]">
-                              Scan with your camera app to check in
+                              Show this QR code to the event organizer
                             </p>
                             <p className="mt-1 text-xs text-center text-indigo-500 max-w-[180px]">
-                              Camera will open a web link to complete check-in
+                              Only event organizers can scan for check-in
                             </p>
+                            <div className="mt-2 text-xs text-center bg-amber-50 p-2 rounded border border-amber-200 max-w-[180px]">
+                              <p className="text-amber-800 font-medium">
+                                Organizer verification required
+                              </p>
+                            </div>
                             {!networkIP && typeof window !== 'undefined' && 
                              (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
                               <p className="mt-1 text-xs text-center text-red-500 max-w-[180px] font-medium">

@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { verifyAuth, isRole, unauthorized, forbidden } from '@/app/lib/auth';
 
-// POST - Check in by scanning a QR code (no auth required)
+// POST - Check in by scanning a QR code - requires organizer authentication
 export async function POST(req: NextRequest) {
   try {
+    // Verify the user is authenticated
+    const { authorized, user, error } = await verifyAuth(req);
+    
+    if (!authorized || !user) {
+      return unauthorized();
+    }
+    
+    // Check if the user is an organizer
+    if (!isRole(user, ['Organizer'])) {
+      return forbidden();
+    }
+    
     const body = await req.json();
     const { qrCodeData } = body;
 
@@ -33,6 +46,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Invalid QR code' },
         { status: 404 }
+      );
+    }
+    
+    // Verify if the current user is the organizer of this event
+    if (user.id !== ticket.event.organizerId) {
+      return NextResponse.json(
+        { success: false, message: 'Only the event organizer can check in attendees' },
+        { status: 403 }
       );
     }
 
