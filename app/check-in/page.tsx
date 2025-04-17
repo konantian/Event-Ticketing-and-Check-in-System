@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
-export default function CheckInPage() {
+// Component that uses useSearchParams, wrapped separately
+function CheckInContent() {
   const searchParams = useSearchParams();
   const qrCode = searchParams.get('qr');
   const [loading, setLoading] = useState(false);
@@ -63,6 +64,70 @@ export default function CheckInPage() {
   };
 
   return (
+    <div className="flex flex-col items-center justify-center py-6 space-y-6">
+      {loading ? (
+        <div className="flex flex-col items-center space-y-3">
+          <Loader2 className="h-12 w-12 text-indigo-600 animate-spin" />
+          <p className="text-indigo-600 font-medium text-lg">Processing check-in...</p>
+        </div>
+      ) : success ? (
+        <div className="flex flex-col items-center space-y-3">
+          <div className="rounded-full bg-green-100 p-3">
+            <CheckCircle2 className="h-12 w-12 text-green-600" />
+          </div>
+          <h3 className="text-xl font-bold text-green-600">Check-in Successful!</h3>
+          <p className="text-gray-600 text-center">
+            You have been successfully checked in.
+          </p>
+          <Button
+            className="mt-4"
+            onClick={() => window.location.href = '/tickets'}
+          >
+            View My Tickets
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-3">
+          {error ? (
+            <>
+              <div className="rounded-full bg-red-100 p-3">
+                <XCircle className="h-12 w-12 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-red-600">Check-in Failed</h3>
+              <p className="text-gray-600 text-center">{error}</p>
+              <Button
+                className="mt-4"
+                onClick={() => window.location.href = '/tickets'}
+              >
+                Return to Tickets
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 text-center">
+                Processing QR code...
+              </p>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Loading fallback for suspense
+function CheckInLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-6 space-y-6">
+      <Loader2 className="h-12 w-12 text-indigo-600 animate-spin" />
+      <p className="text-indigo-600 font-medium text-lg">Loading check-in...</p>
+    </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function CheckInPage() {
+  return (
     <div className="container mx-auto py-8 px-4">
       <div className="max-w-md mx-auto">
         <Card>
@@ -72,54 +137,9 @@ export default function CheckInPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-6 space-y-6">
-              {loading ? (
-                <div className="flex flex-col items-center space-y-3">
-                  <Loader2 className="h-12 w-12 text-indigo-600 animate-spin" />
-                  <p className="text-indigo-600 font-medium text-lg">Processing check-in...</p>
-                </div>
-              ) : success ? (
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="rounded-full bg-green-100 p-3">
-                    <CheckCircle2 className="h-12 w-12 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-green-600">Check-in Successful!</h3>
-                  <p className="text-gray-600 text-center">
-                    You have been successfully checked in.
-                  </p>
-                  <Button
-                    className="mt-4"
-                    onClick={() => window.location.href = '/tickets'}
-                  >
-                    View My Tickets
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center space-y-3">
-                  {error ? (
-                    <>
-                      <div className="rounded-full bg-red-100 p-3">
-                        <XCircle className="h-12 w-12 text-red-600" />
-                      </div>
-                      <h3 className="text-xl font-bold text-red-600">Check-in Failed</h3>
-                      <p className="text-gray-600 text-center">{error}</p>
-                      <Button
-                        className="mt-4"
-                        onClick={() => window.location.href = '/tickets'}
-                      >
-                        Return to Tickets
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-gray-600 text-center">
-                        Processing QR code...
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+            <Suspense fallback={<CheckInLoading />}>
+              <CheckInContent />
+            </Suspense>
           </CardContent>
         </Card>
       </div>

@@ -18,13 +18,7 @@ export async function POST(req: NextRequest) {
     const ticket = await prisma.ticket.findFirst({
       where: { qrCodeData },
       include: {
-        event: {
-          select: {
-            name: true,
-            startTime: true,
-            location: true,
-          }
-        },
+        event: true,
         user: {
           select: {
             id: true,
@@ -51,9 +45,8 @@ export async function POST(req: NextRequest) {
           checkIn: ticket.checkIn,
           ticket: {
             id: ticket.id,
-            eventName: ticket.event.name,
-            startTime: ticket.event.startTime,
-            location: ticket.event.location,
+            eventId: ticket.eventId,
+            userId: ticket.userId,
           }
         },
         { status: 200 }
@@ -74,9 +67,8 @@ export async function POST(req: NextRequest) {
       checkIn,
       ticket: {
         id: ticket.id,
-        eventName: ticket.event.name,
-        startTime: ticket.event.startTime,
-        location: ticket.event.location,
+        eventId: ticket.eventId,
+        userId: ticket.userId,
       }
     });
   } catch (error) {
