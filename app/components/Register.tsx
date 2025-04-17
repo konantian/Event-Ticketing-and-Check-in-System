@@ -72,12 +72,16 @@ function Register({ onRegisterSuccess }: RegisterProps) {
         localStorage.setItem('token', data.token);
       }
       
+      // Show success toast
       toast.success('Registration successful!');
       
-      // Call the onRegisterSuccess callback if provided
-      if (onRegisterSuccess && data.user) {
-        onRegisterSuccess(data.user);
-      }
+      // Add a 1-second delay to ensure users can see the toast message
+      setTimeout(() => {
+        // Call the onRegisterSuccess callback if provided
+        if (onRegisterSuccess && data.user) {
+          onRegisterSuccess(data.user);
+        }
+      }, 1000);
     } catch (error: any) {
       // Display a generic error message in case of network errors or other exceptions
       console.error('Registration error:', error);
@@ -153,12 +157,12 @@ function Register({ onRegisterSuccess }: RegisterProps) {
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full p-2 rounded-md border border-input bg-background"
-              disabled={isLoading}
+              className="input"
+              required
             >
-              <option value="Attendee">Attendee</option>
+              <option value="">Select a role</option>
               <option value="Organizer">Organizer</option>
-              <option value="Staff">Staff</option>
+              <option value="Attendee">Attendee</option>
             </select>
           </div>
           

@@ -42,13 +42,17 @@ This command will create:
 
 Three sample events owned by the Organizer
 
-## Test Users
+## Users
 
-| Role      | Email                  | Password |
-|-----------|------------------------|----------|
-| Organizer | organizer@example.com  | test1234 |
-| Attendee  | attendee@example.com   | test1234 |
-| Staff     | staff@example.com      | test1234 |
+The system includes:
+
+👨‍💼 One Organizer user
+👤 One Attendee user
+
+| Role      | Email                | Password |
+|-----------|----------------------|----------|
+| Organizer | organizer@example.com | test1234 |
+| Attendee  | attendee@example.com  | test1234 |
 
 ## Using Prisma Studio
 
@@ -129,7 +133,7 @@ Explore relationships across tables
 {
   "email": "string",
   "password": "string",
-  "role": "Organizer" | "Staff" | "Attendee"
+  "role": "Organizer" | "Attendee"
 }
 ```
 
@@ -509,187 +513,3 @@ Explore relationships across tables
   "updatedAt": "string (ISO date)"
 }
 ```
-
-### Check-in Management
-
-#### Check in a ticket
-`POST` `/api/checkin`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token (Staff role required) |
-> | None | required | object (JSON) | QR code data |
-
-##### Request Body
-```json
-{
-  "qrCodeData": "string"
-}
-```
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Success message and check-in object |
-> | `400` | `application/json` | `{"error":"Invalid QR code"}` |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-
-##### Response Example
-```json
-{
-  "success": "boolean",
-  "message": "string",
-  "checkIn": {
-    "id": "string",
-    "ticketId": "string",
-    "status": "Checked In",
-    "timestamp": "string (ISO date)"
-  }
-}
-```
-
-#### Get check-in status for event
-`GET` `/api/checkin/status`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token (Organizer or Staff role required) |
-> | eventId | query | string | Event ID |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Check-in status for event |
-> | `400` | `application/json` | `{"error":"Event ID is required"}` |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-> | `404` | `application/json` | `{"error":"Event not found"}` |
-
-##### Response Example
-```json
-{
-  "eventId": "string",
-  "totalTickets": "number",
-  "checkedIn": "number",
-  "remaining": "number",
-  "checkIns": [
-    {
-      "id": "string",
-      "ticketId": "string",
-      "status": "string",
-      "timestamp": "string (ISO date)"
-    }
-  ]
-}
-```
-
-### Discount Management
-
-#### Create a new discount code
-`POST` `/api/discounts`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token (Organizer role required) |
-> | None | required | object (JSON) | Discount data |
-
-##### Request Body
-```json
-{
-  "code": "string",
-  "type": "Percentage" | "Fixed Amount",
-  "value": "number"
-}
-```
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `201` | `application/json` | Created discount object |
-> | `400` | `application/json` | `{"error":"Validation error message"}` |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-
-##### Response Example
-```json
-{
-  "id": "string",
-  "code": "string",
-  "type": "string",
-  "value": "number",
-  "timesUsed": "number",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
-
-#### List all discount codes
-`GET` `/api/discounts`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token (Organizer role required) |
-> | page | query | number | Page number for pagination (optional) |
-> | limit | query | number | Items per page (optional) |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | List of discount codes with pagination |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-
-##### Response Example
-```json
-{
-  "discounts": [
-    {
-      "id": "string",
-      "code": "string",
-      "type": "string",
-      "value": "number",
-      "timesUsed": "number",
-      "createdAt": "string (ISO date)",
-      "updatedAt": "string (ISO date)"
-    }
-  ],
-  "total": "number",
-  "page": "number",
-  "limit": "number"
-}
-```
-
-#### Get discount code by ID
-`GET` `/api/discounts/{id}`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | id | path | string | Discount ID |
-> | Authorization | header | string | JWT token (Organizer role required) |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Discount object |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-> | `404` | `application/json` | `{"error":"Discount not found"}` |
-
-##### Response Example
-```json
-{
-  "id": "string",
-  "code": "string",
-  "type": "string",
-  "value": "number",
-  "timesUsed": "number",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-``` 

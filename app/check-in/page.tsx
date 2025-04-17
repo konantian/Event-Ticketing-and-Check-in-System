@@ -47,9 +47,13 @@ function CheckInContent() {
       const data = await response.json();
       
       if (response.ok) {
-        setSuccess(true);
-        setTicketInfo(data.ticket);
         toast.success('Check-in successful!');
+        
+        // Add a 1-second delay to ensure users can see the toast message
+        setTimeout(() => {
+          setSuccess(true);
+          setTicketInfo(data.ticket);
+        }, 1000);
       } else {
         setError(data.message || 'Check-in failed');
         toast.error(data.message || 'Check-in failed');
@@ -79,12 +83,6 @@ function CheckInContent() {
           <p className="text-gray-600 text-center">
             You have been successfully checked in.
           </p>
-          <Button
-            className="mt-4"
-            onClick={() => window.location.href = '/tickets'}
-          >
-            View My Tickets
-          </Button>
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-3">

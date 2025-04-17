@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
+// GET - Get check-in status for a ticket
 export async function GET(req: NextRequest) {
   try {
-    // Verify authentication (only Staff and Organizers can view check-in status)
+    // Verify authentication (only Organizers can view check-in status)
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized) {
       return unauthorized();
     }
 
-    if (!isRole(user, ['Organizer', 'Staff'])) {
+    if (!isRole(user, ['Organizer'])) {
       return forbidden();
     }
 

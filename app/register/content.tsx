@@ -17,7 +17,6 @@ export default function RegisterPageContent() {
   }, [searchParams]);
 
   const handleRegisterSuccess = (user: any) => {
-    toast.success("Registration successful!");
     
     // Force reload when redirecting to properly refresh the user state
     if (redirect.startsWith('/homepage')) {

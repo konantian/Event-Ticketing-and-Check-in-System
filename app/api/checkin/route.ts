@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-import { verifyAuth, unauthorized } from '@/app/lib/auth';
+import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
 // POST - Check in a user using a QR code
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication (any user can check in with their own QR code)
+    // Verify authentication (only Organizers can check in users)
     const { authorized, user, error } = await verifyAuth(req);
 
     if (!authorized) {

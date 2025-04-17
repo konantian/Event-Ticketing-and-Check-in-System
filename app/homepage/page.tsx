@@ -212,12 +212,14 @@ export default function HomepageEvents() {
               </>
             ) : (
               <div className="flex items-center gap-3">
-                <Link href="/my-tickets">
-                  <Button variant="secondary" className="flex items-center gap-2">
-                    <Ticket className="w-4 h-4" />
-                    View My Tickets
-                  </Button>
-                </Link>
+                {user?.role !== 'Organizer' && (
+                  <Link href="/my-tickets">
+                    <Button variant="secondary" className="flex items-center gap-2">
+                      <Ticket className="w-4 h-4" />
+                      View My Tickets
+                    </Button>
+                  </Link>
+                )}
                 {user?.role === 'Organizer' && (
                   <Button 
                     onClick={() => setShowCreateForm(!showCreateForm)}

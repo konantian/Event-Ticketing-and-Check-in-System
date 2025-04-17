@@ -1,4 +1,4 @@
-export const VALID_ROLES = ['Attendee', 'Organizer', 'Admin'] as const;
+export const VALID_ROLES = ['Attendee', 'Organizer'] as const;
 export type UserRole = typeof VALID_ROLES[number];
 
 export function sanitizeEmail(email: string): string {

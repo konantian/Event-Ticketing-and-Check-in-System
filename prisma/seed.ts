@@ -4,9 +4,10 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Hash the password for all users
   const hashedPassword = await bcrypt.hash('test1234', 10);
 
-  // Upsert users to avoid duplicate email issues
+  // Create sample users
   const organizer = await prisma.user.upsert({
     where: { email: 'organizer@example.com' },
     update: {},
@@ -27,20 +28,12 @@ async function main() {
     },
   });
 
-  const staff = await prisma.user.upsert({
-    where: { email: 'staff@example.com' },
-    update: {},
-    create: {
-      email: 'staff@example.com',
-      password: hashedPassword,
-      role: 'Staff',
-    },
-  });
-
+  console.log('Users created or updated successfully: Organizer, Attendee');
+  
   // Create sample events
-  const eventData = [
-    {
-      organizerId: organizer.id,
+  const event1 = await prisma.event.upsert({
+    where: { id: 1 },
+    update: {
       name: 'Tech Conference 2025',
       description: 'A full-day conference on emerging technologies.',
       capacity: 300,
@@ -49,8 +42,23 @@ async function main() {
       startTime: new Date('2025-06-15T09:00:00Z'),
       endTime: new Date('2025-06-15T17:00:00Z'),
     },
-    {
-      organizerId: organizer.id,
+    create: {
+      name: 'Tech Conference 2025',
+      description: 'A full-day conference on emerging technologies.',
+      capacity: 300,
+      remaining: 300,
+      location: 'Toronto Convention Centre',
+      startTime: new Date('2025-06-15T09:00:00Z'),
+      endTime: new Date('2025-06-15T17:00:00Z'),
+      organizer: {
+        connect: { id: organizer.id }
+      }
+    },
+  });
+
+  const event2 = await prisma.event.upsert({
+    where: { id: 2 },
+    update: {
       name: 'Startup Pitch Night',
       description: 'Startups pitching their ideas to VCs and the public.',
       capacity: 150,
@@ -59,8 +67,23 @@ async function main() {
       startTime: new Date('2025-07-01T18:00:00Z'),
       endTime: new Date('2025-07-01T21:00:00Z'),
     },
-    {
-      organizerId: organizer.id,
+    create: {
+      name: 'Startup Pitch Night',
+      description: 'Startups pitching their ideas to VCs and the public.',
+      capacity: 150,
+      remaining: 150,
+      location: 'Downtown Hub',
+      startTime: new Date('2025-07-01T18:00:00Z'),
+      endTime: new Date('2025-07-01T21:00:00Z'),
+      organizer: {
+        connect: { id: organizer.id }
+      }
+    },
+  });
+
+  const event3 = await prisma.event.upsert({
+    where: { id: 3 },
+    update: {
       name: 'Developer Bootcamp',
       description: 'A hands-on workshop for junior devs',
       capacity: 80,
@@ -69,129 +92,84 @@ async function main() {
       startTime: new Date('2025-05-10T10:00:00Z'),
       endTime: new Date('2025-05-10T16:00:00Z'),
     },
-  ];
+    create: {
+      name: 'Developer Bootcamp',
+      description: 'A hands-on workshop for junior devs',
+      capacity: 80,
+      remaining: 80,
+      location: 'UofT Campus',
+      startTime: new Date('2025-05-10T10:00:00Z'),
+      endTime: new Date('2025-05-10T16:00:00Z'),
+      organizer: {
+        connect: { id: organizer.id }
+      }
+    },
+  });
 
-  const events = [];
-  for (const event of eventData) {
-    const existingEvent = await prisma.event.findFirst({
-      where: { name: event.name },
-    });
-
-    if (existingEvent) {
-      const updatedEvent = await prisma.event.update({
-        where: { id: existingEvent.id },
-        data: event,
-      });
-      events.push(updatedEvent);
-    } else {
-      const createdEvent = await prisma.event.create({
-        data: event,
-      });
-      events.push(createdEvent);
-    }
-  }
+  console.log('Events created successfully');
 
   // Create discounts
-  const discount1 = await prisma.discount.upsert({
-    where: { code: 'SUMMER20' },
+  const discountCode = await prisma.discount.upsert({
+    where: { code: 'DISCOUNT20' },
     update: {},
     create: {
-      code: 'SUMMER20',
+      code: 'DISCOUNT20',
       type: 'Percentage',
       value: 20,
+      timesUsed: 0,
     },
   });
 
-  const discount2 = await prisma.discount.upsert({
-    where: { code: 'EARLYBIRD10' },
-    update: {},
-    create: {
-      code: 'EARLYBIRD10',
-      type: 'Fixed Amount',
-      value: 10,
-    },
-  });
+  console.log('Discount code created');
 
-  // Create tickets with prices defined here
-  const ticketData = [
+  // Create tickets
+  for (const ticketData of [
     {
       userId: attendee.id,
-      eventId: events[0].id, // Tech Conference 2025
+      eventId: event1.id, // Tech Conference 2025
       price: 100,
       tier: 'General',
-      qrCodeData: 'TICKET1',
-      discountCodeId: discount1.id,
+      qrCodeData: `ticket-event1-${Date.now()}-1`,
     },
     {
       userId: attendee.id,
-      eventId: events[1].id, // Startup Pitch Night
+      eventId: event2.id, // Startup Pitch Night
       price: 50,
       tier: 'VIP',
-      qrCodeData: 'TICKET2',
+      qrCodeData: `ticket-event2-${Date.now()}-2`,
     },
     {
       userId: attendee.id,
-      eventId: events[2].id, // Developer Bootcamp
+      eventId: event3.id, // Developer Bootcamp
       price: 20,
       tier: 'General',
-      qrCodeData: 'TICKET3',
-      discountCodeId: discount2.id,
+      qrCodeData: `ticket-event3-${Date.now()}-3`,
     },
-  ];
-
-  const createdTickets = [];
-  for (const ticket of ticketData) {
+  ]) {
+    // Check if ticket already exists
     const existingTicket = await prisma.ticket.findFirst({
-      where: { qrCodeData: ticket.qrCodeData },
+      where: {
+        userId: ticketData.userId,
+        eventId: ticketData.eventId,
+      },
     });
 
-    if (existingTicket) {
-      const updatedTicket = await prisma.ticket.update({
-        where: { id: existingTicket.id },
-        data: ticket,
+    if (!existingTicket) {
+      await prisma.ticket.create({
+        data: ticketData,
       });
-      createdTickets.push(updatedTicket);
-    } else {
-      const createdTicket = await prisma.ticket.create({
-        data: ticket,
-      });
-      createdTickets.push(createdTicket);
     }
   }
 
-  // Create check-ins
-  if (createdTickets[0]) {
-    await prisma.checkIn.upsert({
-      where: { ticketId: createdTickets[0].id },
-      update: {},
-      create: {
-        ticketId: createdTickets[0].id,
-        status: 'Checked In',
-        timestamp: new Date(),
-      },
-    });
-  }
-
-  if (createdTickets[1]) {
-    await prisma.checkIn.upsert({
-      where: { ticketId: createdTickets[1].id },
-      update: {},
-      create: {
-        ticketId: createdTickets[1].id,
-        status: 'Not Checked In',
-        timestamp: new Date(),
-      },
-    });
-  }
-
-  console.log('Seeded users, events, discounts, tickets, and check-ins!');
+  console.log('Tickets created successfully');
 }
 
 main()
   .catch((e) => {
-    console.error('Seed failed:', e);
+    console.error(e);
     process.exit(1);
   })
-  .finally(() => {
-    prisma.$disconnect();
+  .finally(async () => {
+    await prisma.$disconnect();
   });
+
