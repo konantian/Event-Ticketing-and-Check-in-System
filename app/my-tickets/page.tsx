@@ -4,6 +4,9 @@ import TicketList from "../components/TicketList";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function MyTicketsPage() {
   const [user, setUser] = useState(null);
@@ -24,7 +27,15 @@ export default function MyTicketsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">My Tickets</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">My Tickets</h1>
+        <Link href="/homepage">
+          <Button variant="outline" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Homepage
+          </Button>
+        </Link>
+      </div>
       <TicketList />
     </div>
   );

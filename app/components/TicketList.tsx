@@ -116,7 +116,7 @@ function TicketList() {
               <div className="flex-grow p-4 sm:p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="font-bold text-xl text-gray-900">{ticket.eventName || 'Event Name'}</h3>
+                    <h3 className="font-bold text-xl text-gray-900">{ticket.event.name || 'Event Name'}</h3>
                     <div className="flex items-center text-gray-500 mt-1">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>{formatDate(ticket.event?.startTime)}</span>

@@ -2,11 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Login from "../components/Login";
+import Register from "../components/Register";
 import { toast } from "sonner";
 import Link from "next/link";
 
-export default function LoginPageContent() {
+export default function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [redirect, setRedirect] = useState("/homepage");
@@ -16,8 +16,8 @@ export default function LoginPageContent() {
     if (param) setRedirect(param);
   }, [searchParams]);
 
-  const handleLoginSuccess = (user: any) => {
-    toast.success("Login successful!");
+  const handleRegisterSuccess = (user: any) => {
+    toast.success("Registration successful!");
     
     // Force reload when redirecting to properly refresh the user state
     if (redirect.startsWith('/homepage')) {
@@ -30,8 +30,8 @@ export default function LoginPageContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white shadow-xl rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-center mb-4">Login</h1>
-        <Login onLoginSuccess={handleLoginSuccess} />
+        <h1 className="text-2xl font-bold text-center mb-4">Register</h1>
+        <Register onRegisterSuccess={handleRegisterSuccess} />
 
         {/* Return to Home Page Button */}
         <div className="mt-6 text-center">
@@ -44,4 +44,4 @@ export default function LoginPageContent() {
       </div>
     </div>
   );
-}
+} 

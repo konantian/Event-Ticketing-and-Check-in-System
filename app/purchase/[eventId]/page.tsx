@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default function PurchasePage() {
   const { eventId } = useParams();
@@ -83,72 +85,82 @@ export default function PurchasePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-gray-800 text-white py-12 px-6">
-      <div className="max-w-2xl mx-auto bg-white text-gray-800 shadow-lg rounded-xl p-8">
-        <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-indigo-700">
-          🎟 Complete Your Ticket Purchase
-        </h1>
-
-        <div className="space-y-3 mb-6 text-sm">
-          <p><strong>Event:</strong> {event.name}</p>
-          <p><strong>Description:</strong> {event.description}</p>
-          <p><strong>Location:</strong> {event.location}</p>
-          <p><strong>Date:</strong> {new Date(event.startTime).toLocaleString()}</p>
-          <p><strong>Remaining Tickets:</strong> {event.remaining}</p>
+      <div className="max-w-2xl mx-auto">
+        <div className="flex justify-end mb-4">
+          <Link href="/homepage">
+            <button className="flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Homepage
+            </button>
+          </Link>
         </div>
+        <div className="bg-white text-gray-800 shadow-lg rounded-xl p-8">
+          <h1 className="text-3xl font-bold mb-6 flex items-center gap-2 text-indigo-700">
+            🎟 Complete Your Ticket Purchase
+          </h1>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block font-medium mb-1">Ticket Tier</label>
-            <select
-              value={tier}
-              onChange={(e) => setTier(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value="General">General - $50</option>
-              <option value="VIP">VIP - $100</option>
-            </select>
+          <div className="space-y-3 mb-6 text-sm">
+            <p><strong>Event:</strong> {event.name}</p>
+            <p><strong>Description:</strong> {event.description}</p>
+            <p><strong>Location:</strong> {event.location}</p>
+            <p><strong>Date:</strong> {new Date(event.startTime).toLocaleString()}</p>
+            <p><strong>Remaining Tickets:</strong> {event.remaining}</p>
           </div>
 
-          <div>
-            <label className="block font-medium mb-1">Discount Code (optional)</label>
-            <input
-              type="text"
-              placeholder="Enter a code"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-1">Payment Info (mock)</label>
-            <input
-              type="text"
-              placeholder="Card number (mock)"
-              className="w-full border rounded px-3 py-2 text-gray-500 bg-gray-100"
-              disabled
-            />
-          </div>
-
-          {message && (
-            <div
-              className={`px-4 py-2 rounded mt-2 text-sm ${
-                message.includes('success')
-                  ? 'bg-green-100 text-green-700 border border-green-300'
-                  : 'bg-red-100 text-red-700 border border-red-300'
-              }`}
-            >
-              {message}
+          <div className="space-y-4">
+            <div>
+              <label className="block font-medium mb-1">Ticket Tier</label>
+              <select
+                value={tier}
+                onChange={(e) => setTier(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="General">General - $50</option>
+                <option value="VIP">VIP - $100</option>
+              </select>
             </div>
-          )}
 
-          <button
-            disabled={loading}
-            onClick={handlePurchase}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white w-full mt-4 py-3 rounded font-semibold disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : 'Purchase Ticket'}
-          </button>
+            <div>
+              <label className="block font-medium mb-1">Discount Code (optional)</label>
+              <input
+                type="text"
+                placeholder="Enter a code"
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Payment Info (mock)</label>
+              <input
+                type="text"
+                placeholder="Card number (mock)"
+                className="w-full border rounded px-3 py-2 text-gray-500 bg-gray-100"
+                disabled
+              />
+            </div>
+
+            {message && (
+              <div
+                className={`px-4 py-2 rounded mt-2 text-sm ${
+                  message.includes('success')
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : 'bg-red-100 text-red-700 border border-red-300'
+                }`}
+              >
+                {message}
+              </div>
+            )}
+
+            <button
+              disabled={loading}
+              onClick={handlePurchase}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white w-full mt-4 py-3 rounded font-semibold disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : 'Purchase Ticket'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

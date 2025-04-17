@@ -24,15 +24,15 @@ function AuthForms({ onLoginSuccess, onRegisterSuccess }: AuthFormsProps) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-8 w-full">
-      <div className="w-full md:w-1/2 p-8">
+    <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
+      <div className="w-full md:w-1/2 py-2 px-4">
         {showLogin ? (
           <Login onLoginSuccess={onLoginSuccess} />
         ) : (
           <Register onRegisterSuccess={onRegisterSuccess} />
         )}
       </div>
-      <div className="w-full md:w-1/2 p-8">
+      <div className="w-full md:w-1/2 py-2 px-4">
         <div className="text-center">
           {showLogin ? (
             <p>

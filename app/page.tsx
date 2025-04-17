@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import AllEvents from './homepage/page';
+import HomepageEvents from './homepage/page';
 import TicketList from './components/TicketList';
 import LogoutButton from './components/LogoutButton';
 import { Toaster } from 'sonner';
@@ -56,10 +56,20 @@ export default function HomePage() {
 
   const handleLoginSuccess = (user: User) => {
     setUser(user);
+    // Force a window reload to update all components
+    window.location.reload();
   };
 
   const handleRegisterSuccess = (user: User) => {
     setUser(user);
+    // Force a window reload to update all components
+    window.location.reload();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    window.location.reload();
   };
 
   if (isLoading) {
@@ -74,7 +84,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <main className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 pb-8">
       {/* Toast provider */}
       <Toaster position="top-right" richColors closeButton />
 
@@ -132,10 +142,17 @@ export default function HomePage() {
                       {getInitials(user.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <LogoutButton onLogout={() => setUser(null)} />
+                  <LogoutButton onLogout={handleLogout} />
                 </div>
               ) : (
-                <></>
+                <div className="flex items-center gap-3">
+                  <Link href="/login">
+                    <Button variant="outline">Login</Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button>Register</Button>
+                  </Link>
+                </div>
               )}
             </div>
 
@@ -182,11 +199,7 @@ export default function HomePage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      localStorage.removeItem('token');
-                      setUser(null);
-                      setMobileMenuOpen(false);
-                    }}
+                    onClick={handleLogout}
                     className="flex w-full items-center px-2 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50"
                   >
                     <LogOut className="h-5 w-5 mr-2" />
@@ -194,7 +207,16 @@ export default function HomePage() {
                   </button>
                 </>
               ) : (
-                <></>
+                <>
+                  <Link href="/login" className="flex items-center px-2 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-indigo-50 hover:text-indigo-600">
+                    <User className="h-5 w-5 mr-2" />
+                    Login
+                  </Link>
+                  <Link href="/register" className="flex items-center px-2 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-indigo-50 hover:text-indigo-600">
+                    <User className="h-5 w-5 mr-2" />
+                    Register
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -202,28 +224,25 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2">
         {user ? (
           <>
-            <AllEvents />
-
-            {/* My Tickets - Attendee only */}
-            {user?.role === 'Attendee' && (
-              <div id="tickets" className="mt-16">
-                <TicketList />
-              </div>
-            )}
+            <HomepageEvents />
           </>
         ) : (
-          <>
-            <AllEvents />
-            <AuthForms onLoginSuccess={handleLoginSuccess} onRegisterSuccess={handleRegisterSuccess} />
-            <div className="text-center mt-4">
-              <Link href="/">
-                <Button variant="outline">Return to Home Page</Button>
+          <div className="space-y-2">
+            <div className="mb-2">
+              <HomepageEvents />
+            </div>
+            <div>
+              <AuthForms onLoginSuccess={handleLoginSuccess} onRegisterSuccess={handleRegisterSuccess} />
+            </div>
+            <div className="text-center">
+              <Link href="/homepage">
+                <Button variant="outline">Back to Homepage</Button>
               </Link>
             </div>
-          </>
+          </div>
         )}
       </div>
 

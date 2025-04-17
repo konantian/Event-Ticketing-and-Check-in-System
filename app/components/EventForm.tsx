@@ -12,6 +12,7 @@ interface Event {
   description?: string;
   location?: string;
   startTime?: string;
+  endTime?: string;
   capacity?: number;
   remaining?: number;
 }
@@ -27,6 +28,7 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
   const [capacity, setCapacity] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
+  const [endTime, setEndTime] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +43,14 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ name, description, capacity: parseInt(capacity) || 0, location, startTime }),
+        body: JSON.stringify({ 
+          name, 
+          description, 
+          capacity: parseInt(capacity) || 0, 
+          location, 
+          startTime,
+          endTime 
+        }),
       });
       
       const data = await response.json();
@@ -63,6 +72,7 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
       setCapacity('');
       setLocation('');
       setStartTime('');
+      setEndTime('');
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong');
       console.error('Event creation error:', error);
@@ -136,6 +146,18 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
               placeholder="Enter start time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="endTime" className="text-sm font-medium">End Time</label>
+            <Input
+              id="endTime"
+              type="datetime-local"
+              placeholder="Enter end time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
               required
               disabled={isLoading}
             />
