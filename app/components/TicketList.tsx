@@ -4,13 +4,50 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Ticket, Calendar, User, MapPin, Clock, Download, QrCode } from "lucide-react";
+import { Ticket, Calendar, User, MapPin, Clock, QrCode, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from 'sonner';
 
+interface TicketType {
+  id: number;
+  eventId: number;
+  userId: string;
+  tier: string;
+  price?: number;
+  checkIn?: {
+    timestamp: string;
+  } | null;
+  event: {
+    name: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+  };
+  qrCodeData?: string;
+}
+
+interface GroupedTicketType {
+  eventId: number;
+  tickets: TicketType[];
+  event: {
+    name: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+  };
+  count: number;
+  price?: number;
+  tier: string;
+  firstTicketId: number;
+  checkedInCount: number;
+}
+
 function TicketList() {
-  const [tickets, setTickets] = useState([]);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [groupedTickets, setGroupedTickets] = useState<GroupedTicketType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showQrCode, setShowQrCode] = useState(null);
+  const [showQrCode, setShowQrCode] = useState<number | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [activeTicketId, setActiveTicketId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -31,7 +68,15 @@ function TicketList() {
         }
         
         const data = await response.json();
-        setTickets(data.tickets || []);
+        // Ensure all tickets have qrCodeData
+        const ticketsWithQR = data.tickets?.map((ticket: TicketType) => {
+          if (!ticket.qrCodeData) {
+            // Generate a unique QR code data if not present
+            ticket.qrCodeData = `ticket-${ticket.id}-${ticket.eventId}-${Date.now()}`;
+          }
+          return ticket;
+        }) || [];
+        setTickets(ticketsWithQR);
       } catch (error) {
         toast.error(error.message || 'Something went wrong');
         console.error('Error fetching tickets:', error);
@@ -43,13 +88,63 @@ function TicketList() {
     fetchTickets();
   }, []);
 
-  // Generate a QR code URL for demo purposes
-  const generateQrCode = (ticketId) => {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ticket_id_${ticketId}`;
+  // Group tickets by event when tickets change
+  useEffect(() => {
+    const groupTicketsByEvent = () => {
+      // Create a map to group tickets by eventId
+      const ticketGroups = new Map<number, TicketType[]>();
+      
+      tickets.forEach(ticket => {
+        const eventId = ticket.eventId;
+        if (!ticketGroups.has(eventId)) {
+          ticketGroups.set(eventId, []);
+        }
+        ticketGroups.get(eventId)?.push(ticket);
+      });
+      
+      // Convert the map to an array of grouped tickets
+      const grouped = Array.from(ticketGroups.entries()).map(([eventId, eventTickets]) => {
+        const firstTicket = eventTickets[0];
+        // Count how many tickets have been checked in
+        const checkedInCount = eventTickets.filter(ticket => ticket.checkIn !== null).length;
+        
+        return {
+          eventId,
+          tickets: eventTickets,
+          event: firstTicket.event,
+          count: eventTickets.length,
+          price: firstTicket.price,
+          tier: firstTicket.tier,
+          firstTicketId: firstTicket.id,
+          checkedInCount
+        };
+      });
+      
+      setGroupedTickets(grouped);
+    };
+    
+    groupTicketsByEvent();
+  }, [tickets]);
+
+  // Generate a QR code URL using the ticket's actual QR code data
+  const generateQrCode = (ticket: TicketType) => {
+    // If ticket doesn't have qrCodeData, generate one based on ticket ID and event ID
+    if (!ticket.qrCodeData) {
+      ticket.qrCodeData = `ticket-${ticket.id}-${ticket.eventId}-${Date.now()}`;
+    }
+    
+    // Create a URL that can be opened on a mobile device to check in
+    // Points directly to the auto check-in page
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const checkInUrl = `${baseUrl}/check-in?qr=${encodeURIComponent(ticket.qrCodeData)}`;
+    
+    // URL encode the entire check-in URL for the QR code
+    const encodedUrl = encodeURIComponent(checkInUrl);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}`;
   };
 
   // Format date for cleaner display
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string) => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -61,7 +156,7 @@ function TicketList() {
   };
 
   // Format time for cleaner display
-  const formatTime = (dateString) => {
+  const formatTime = (dateString?: string) => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', { 
@@ -69,6 +164,76 @@ function TicketList() {
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  // Format check-in timestamp
+  const formatCheckInTime = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Handle self check-in
+  const handleCheckIn = async (ticket: TicketType) => {
+    if (ticket.checkIn) {
+      toast.info('This ticket has already been checked in.');
+      return;
+    }
+
+    if (!ticket.qrCodeData) {
+      toast.error('No QR code data available for this ticket.');
+      return;
+    }
+
+    setCheckingIn(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication required');
+        return;
+      }
+
+      const response = await fetch('/api/checkin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ qrCodeData: ticket.qrCodeData })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast.success('Check-in successful!');
+        // Update the ticket in the state
+        const updatedTickets = tickets.map(t => {
+          if (t.id === ticket.id) {
+            return {
+              ...t,
+              checkIn: {
+                timestamp: data.checkIn.timestamp || new Date().toISOString()
+              }
+            };
+          }
+          return t;
+        });
+        setTickets(updatedTickets);
+      } else {
+        toast.error(data.message || 'Check-in failed');
+      }
+    } catch (error) {
+      console.error('Error during check-in:', error);
+      toast.error('Something went wrong during check-in');
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   if (isLoading) {
@@ -102,24 +267,20 @@ function TicketList() {
           <h2 className="text-3xl font-bold text-gray-800">My Tickets</h2>
           <p className="text-gray-500 mt-1">Manage your upcoming event tickets</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Download className="h-4 w-4" />
-          Export All
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {tickets.map((ticket) => (
-          <Card key={ticket.id} className="overflow-hidden hover:shadow-md transition-shadow">
+        {groupedTickets.map((groupedTicket) => (
+          <Card key={groupedTicket.eventId} className={`overflow-hidden hover:shadow-md transition-shadow ${!groupedTicket.tickets[0].checkIn ? 'border-green-400 border-2' : ''}`}>
             <div className="flex flex-col sm:flex-row">
               {/* Ticket details */}
               <div className="flex-grow p-4 sm:p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="font-bold text-xl text-gray-900">{ticket.event.name || 'Event Name'}</h3>
+                    <h3 className="font-bold text-xl text-gray-900">{groupedTicket.event?.name || 'Event Name'}</h3>
                     <div className="flex items-center text-gray-500 mt-1">
                       <Calendar className="h-4 w-4 mr-1" />
-                      <span>{formatDate(ticket.event?.startTime)}</span>
+                      <span>{formatDate(groupedTicket.event?.startTime)}</span>
                     </div>
                   </div>
                   <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>
@@ -128,65 +289,113 @@ function TicketList() {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-gray-600">
                     <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>{formatTime(ticket.event?.startTime)} - {formatTime(ticket.event?.endTime)}</span>
+                    <span>{formatTime(groupedTicket.event?.startTime)} - {formatTime(groupedTicket.event?.endTime)}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
                     <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>{ticket.event?.location || 'Venue TBD'}</span>
+                    <span>{groupedTicket.event?.location || 'Venue TBD'}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
                     <User className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>1 Attendee</span>
+                    <span>{groupedTicket.count} {groupedTicket.count === 1 ? 'Attendee' : 'Attendees'}</span>
+                  </div>
+                  <div className="flex items-center">
+                    {groupedTicket.checkedInCount > 0 ? (
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 mr-2 text-amber-500" />
+                    )}
+                    <span className={`text-sm ${groupedTicket.checkedInCount > 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                      {groupedTicket.tickets[0].checkIn === null ? 'Not checked in yet' : 
+                       `Checked in: ${formatCheckInTime(groupedTicket.tickets[0].checkIn?.timestamp)}`}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <div>
-                    <Badge variant="outline" className="font-medium text-indigo-700 bg-indigo-50 border-indigo-200">
-                      {ticket.tier || 'General'}
+                  <div className="flex items-center space-x-6">
+                    <Badge variant="outline" className="font-medium text-white bg-purple-600 border-purple-700 hover:bg-purple-700">
+                      {groupedTicket.tier || 'General'}
                     </Badge>
-                    <span className="ml-2 text-xl font-bold text-indigo-700">${ticket.price || '0'}</span>
+                    <span className="text-xl font-bold text-indigo-700">${groupedTicket.price || '0'}</span>
                   </div>
                   
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-1" 
-                    onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
-                  >
-                    <QrCode className="h-4 w-4" />
-                    {ticket.id === showQrCode ? 'Hide' : 'View'} QR
-                  </Button>
+                  <div className="flex space-x-2">
+                    {!groupedTicket.tickets[0].checkIn && (
+                      <Button 
+                        variant="default" 
+                        size="default"
+                        className="gap-1 bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-2 shadow-lg pulse-animation" 
+                        onClick={() => handleCheckIn(groupedTicket.tickets[0])}
+                        disabled={checkingIn}
+                        onMouseEnter={() => setActiveTicketId(groupedTicket.firstTicketId)}
+                        onMouseLeave={() => setActiveTicketId(null)}
+                      >
+                        <CheckCircle2 className="h-5 w-5 mr-1" />
+                        {activeTicketId === groupedTicket.firstTicketId ? 'Check In Now' : 'Check In'}
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-1" 
+                      onClick={() => setShowQrCode(groupedTicket.firstTicketId === showQrCode ? null : groupedTicket.firstTicketId)}
+                    >
+                      <QrCode className="h-4 w-4" />
+                      {groupedTicket.firstTicketId === showQrCode ? 'Hide' : 'View'} QR
+                    </Button>
+                  </div>
                 </div>
               </div>
               
               {/* QR Code section (visible when toggled) */}
-              {ticket.id === showQrCode && (
+              {groupedTicket.firstTicketId === showQrCode && (
                 <div className="bg-indigo-50 p-4 flex flex-col items-center justify-center border-t sm:border-t-0 sm:border-l border-indigo-100">
                   <div className="bg-white p-2 rounded shadow-sm">
                     <img 
-                      src={generateQrCode(ticket.id)} 
+                      src={generateQrCode(groupedTicket.tickets[0])} 
                       alt="Ticket QR Code" 
                       className="w-32 h-32"
                     />
                   </div>
-                  <p className="mt-2 text-xs text-center text-gray-500 max-w-[120px]">
-                    Scan at event entrance
+                  <p className="mt-2 text-xs text-center text-gray-500 max-w-[180px]">
+                    Scan with your camera app to check in
                   </p>
+                  <p className="mt-1 text-xs text-center text-indigo-500 max-w-[180px]">
+                    Camera will open a web link to complete check-in
+                  </p>
+                  <p className="mt-1 text-xs text-center text-gray-600 font-medium max-w-[180px]">
+                    QR ID: {groupedTicket.tickets[0].qrCodeData?.substring(0, 8)}...
+                  </p>
+                  {groupedTicket.count > 1 && (
+                    <p className="mt-2 text-xs text-center font-medium text-indigo-700">
+                      +{groupedTicket.count - 1} more {groupedTicket.count - 1 === 1 ? 'ticket' : 'tickets'}
+                    </p>
+                  )}
                 </div>
               )}
-            </div>
-            
-            {/* Ticket footer */}
-            <div className="flex justify-between items-center p-4 bg-gray-50 border-t">
-              <span className="text-xs text-gray-500">Ticket #{ticket.id}</span>
-              <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-800">
-                Download PDF
-              </Button>
             </div>
           </Card>
         ))}
       </div>
+
+      <style jsx global>{`
+        .pulse-animation {
+          animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-import { verifyAuth, unauthorized } from '@/app/lib/auth';
 
-// POST - Check in a user using a QR code
+// POST - Check in by scanning a QR code (no auth required)
 export async function POST(req: NextRequest) {
   try {
-    // Verify authentication (any user can check in with their own QR code)
-    const { authorized, user, error } = await verifyAuth(req);
-
-    if (!authorized) {
-      return unauthorized();
-    }
-
     const body = await req.json();
     const { qrCodeData } = body;
 
@@ -26,7 +18,13 @@ export async function POST(req: NextRequest) {
     const ticket = await prisma.ticket.findFirst({
       where: { qrCodeData },
       include: {
-        event: true,
+        event: {
+          select: {
+            name: true,
+            startTime: true,
+            location: true,
+          }
+        },
         user: {
           select: {
             id: true,
@@ -45,13 +43,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (ticket.checkIn) {
+      // Already checked in, but return success for better UX
       return NextResponse.json(
         { 
-          success: false, 
-          message: 'Ticket already checked in',
-          checkIn: ticket.checkIn
+          success: true, 
+          message: 'Already checked in',
+          checkIn: ticket.checkIn,
+          ticket: {
+            id: ticket.id,
+            eventName: ticket.event.name,
+            startTime: ticket.event.startTime,
+            location: ticket.event.location,
+          }
         },
-        { status: 400 }
+        { status: 200 }
       );
     }
 
@@ -67,6 +72,12 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Check-in successful',
       checkIn,
+      ticket: {
+        id: ticket.id,
+        eventName: ticket.event.name,
+        startTime: ticket.event.startTime,
+        location: ticket.event.location,
+      }
     });
   } catch (error) {
     console.error('Check-in error:', error);

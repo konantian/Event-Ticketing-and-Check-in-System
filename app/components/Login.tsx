@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 
 interface User {
   id: string;
@@ -53,6 +53,7 @@ function Login({ onLoginSuccess }: LoginProps) {
 
   return (
     <Card className="w-full max-w-md mx-auto">
+      <Toaster position="top-right" richColors closeButton />
       <CardHeader className="space-y-1 mb-4">
         <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
         <CardDescription className="text-center text-gray-500">Enter your credentials to access your account</CardDescription>
@@ -83,7 +84,6 @@ function Login({ onLoginSuccess }: LoginProps) {
               disabled={isLoading}
             />
           </div>
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Login'}
           </Button>
