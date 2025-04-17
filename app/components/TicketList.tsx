@@ -350,33 +350,30 @@ function TicketList() {
                         {/* QR Code section (visible when toggled) */}
                         {ticket.id === showQrCode && !ticket.checkIn && (
                           <div className="ticket-stub">
-                            <div className="bg-white p-2 rounded shadow-sm">
-                              <img 
-                                src={generateQrCode(ticket)} 
-                                alt="Ticket QR Code" 
-                                className="w-32 h-32"
-                              />
+                            <div className="fancy-qr-container">
+                              <div className="qr-outer-glow"></div>
+                              <div className="qr-scanner-line"></div>
+                              <div className="qr-frame">
+                                <img 
+                                  src={generateQrCode(ticket)} 
+                                  alt="Ticket QR Code" 
+                                  className="fancy-qr-code"
+                                />
+                                <div className="qr-corner top-left"></div>
+                                <div className="qr-corner top-right"></div>
+                                <div className="qr-corner bottom-left"></div>
+                                <div className="qr-corner bottom-right"></div>
+                              </div>
                             </div>
-                            <p className="mt-2 text-xs text-center text-gray-500 max-w-[180px]">
-                              Show this QR code to the event organizer
+                            <p className="qr-caption">
+                              Show this QR code to the event organizer to check you in
                             </p>
-                            <p className="mt-1 text-xs text-center text-indigo-500 max-w-[180px]">
-                              Only event organizers can scan for check-in
-                            </p>
-                            <div className="mt-2 text-xs text-center bg-amber-50 p-2 rounded border border-amber-200 max-w-[180px]">
-                              <p className="text-amber-800 font-medium">
-                                Organizer verification required
-                              </p>
-                            </div>
                             {!networkIP && typeof window !== 'undefined' && 
-                             (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                              <p className="mt-1 text-xs text-center text-red-500 max-w-[180px] font-medium">
+                              (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                              <p className="mt-1 text-xs text-center text-red-500 max-w-[200px] font-medium">
                                 ⚠️ QR won't work on mobile! Set NEXT_PUBLIC_LOCAL_IP in .env
                               </p>
                             )}
-                            <p className="mt-1 text-xs text-center text-gray-600 font-medium max-w-[180px]">
-                              QR ID: {ticket.qrCodeData?.substring(0, 8)}...
-                            </p>
                           </div>
                         )}
                       </div>
