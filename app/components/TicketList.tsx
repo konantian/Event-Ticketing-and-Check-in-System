@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Ticket, Calendar, User, MapPin, Clock, QrCode, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
 import { toast, Toaster } from 'sonner';
 import Link from 'next/link';
+import './ticketList.css';
 
 interface TicketType {
   id: number;
@@ -31,6 +32,14 @@ function TicketList() {
   const [isLoading, setIsLoading] = useState(true);
   const [showQrCode, setShowQrCode] = useState<number | null>(null);
   const [networkIP, setNetworkIP] = useState<string>("");
+
+  // Helper function to determine price class based on price range
+  const getPriceClass = (price: number) => {
+    if (price >= 200) return 'price-premium';
+    if (price >= 100) return 'price-high';
+    if (price >= 50) return 'price-medium';
+    return 'price-standard';
+  };
 
   // Set up local network IP notice for development
   useEffect(() => {
@@ -282,10 +291,33 @@ function TicketList() {
                           
                           <div className="flex justify-between items-center">
                             <div className="flex items-center space-x-6">
-                              <Badge variant="outline" className="font-medium text-white bg-purple-600 border-purple-700 hover:bg-purple-700">
-                                {ticket.tier || 'General'}
-                              </Badge>
-                              <span className="text-xl font-bold text-indigo-700">${ticket.price || '0'}</span>
+                              {ticket.tier?.toLowerCase() === 'vip' ? (
+                                <div className="fancy-tier vip-tier">
+                                  <span className="vip-star">★</span>
+                                  <span className="tier-text">VIP</span>
+                                </div>
+                              ) : ticket.tier?.toLowerCase().includes('premium') || ticket.tier?.toLowerCase().includes('platinum') ? (
+                                <div className="fancy-tier premium-tier">
+                                  <span className="premium-diamond">♦</span>
+                                  <span className="tier-text">{ticket.tier}</span>
+                                </div>
+                              ) : ticket.tier?.toLowerCase().includes('gold') ? (
+                                <div className="fancy-tier gold-tier">
+                                  <span className="gold-symbol">●</span>
+                                  <span className="tier-text">{ticket.tier}</span>
+                                </div>
+                              ) : (
+                                <div className="fancy-tier standard-tier">
+                                  <span className="tier-text">{ticket.tier || 'General'}</span>
+                                </div>
+                              )}
+                              <div className={`price-badge ${getPriceClass(ticket.price || 0)}`}>
+                                <span className="price-currency">$</span>
+                                <span className="price-amount">{ticket.price || '0'}</span>
+                                {ticket.price && ticket.price >= 100 && (
+                                  <span className="price-sparkle">✨</span>
+                                )}
+                              </div>
                             </div>
                             
                             <div className="flex space-x-2">
@@ -355,152 +387,6 @@ function TicketList() {
           </div>
         ))}
       </div>
-
-      <style jsx global>{`
-        .pulse-animation {
-          animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-          0% {
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
-          }
-        }
-        
-        /* Ticket design styles */
-        .ticket-container {
-          margin-bottom: 1.5rem;
-          perspective: 1000px;
-        }
-        
-        @media (min-width: 1024px) {
-          .grid-cols-3 > .ticket-container,
-          .grid-cols-4 > .ticket-container {
-            height: 100%;
-          }
-        }
-        
-        .ticket-container.unchecked {
-          animation: float 3s ease-in-out infinite;
-        }
-        
-        .ticket-card-wrapper {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          transition: transform 0.3s ease;
-        }
-        
-        .ticket-card-wrapper:hover {
-          transform: translateY(-5px) rotateX(5deg);
-          box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .ticket-body {
-          display: flex;
-          flex-direction: column;
-          background: white;
-          border-radius: 16px;
-          overflow: hidden;
-          position: relative;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-          border: 1px solid #e5e7eb;
-        }
-        
-        .ticket-content {
-          position: relative;
-          padding: 1.5rem;
-          flex: 1;
-          background-color: white;
-          background-image: 
-            radial-gradient(circle at 50px 50px, rgba(99, 102, 241, 0.05) 20px, transparent 0),
-            radial-gradient(circle at 150px 150px, rgba(99, 102, 241, 0.05) 30px, transparent 0),
-            radial-gradient(circle at 250px 80px, rgba(99, 102, 241, 0.05) 25px, transparent 0);
-        }
-        
-        .ticket-content::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 5px;
-          background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-        }
-        
-        .ticket-stub {
-          padding: 1.5rem;
-          background: #f9fafb;
-          border-top: 2px dashed #e5e7eb;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          position: relative;
-        }
-        
-        /* Scalloped edges */
-        .ticket-body::before,
-        .ticket-body::after {
-          content: "";
-          position: absolute;
-          width: 16px;
-          height: 16px;
-          background-color: #f3f4f6;
-          border-radius: 50%;
-          z-index: 2;
-        }
-        
-        /* Left side scalloped edge */
-        .ticket-body::before {
-          left: -8px;
-          top: 50%;
-          box-shadow: 
-            0 -60px 0 #f3f4f6,
-            0 -120px 0 #f3f4f6,
-            0 -180px 0 #f3f4f6,
-            0 60px 0 #f3f4f6,
-            0 120px 0 #f3f4f6,
-            0 180px 0 #f3f4f6;
-        }
-        
-        /* Right side scalloped edge */
-        .ticket-body::after {
-          right: -8px;
-          top: 50%;
-          box-shadow: 
-            0 -60px 0 #f3f4f6,
-            0 -120px 0 #f3f4f6,
-            0 -180px 0 #f3f4f6,
-            0 60px 0 #f3f4f6,
-            0 120px 0 #f3f4f6,
-            0 180px 0 #f3f4f6;
-        }
-        
-        .ticket-content::after {
-          content: "";
-          position: absolute;
-          bottom: 0;
-          left: 10%;
-          width: 80%;
-          height: 1px;
-          background: repeating-linear-gradient(90deg, #ddd, #ddd 5px, transparent 5px, transparent 10px);
-        }
-        
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
-        }
-      `}</style>
     </div>
   );
 }
