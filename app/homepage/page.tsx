@@ -4,10 +4,16 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarIcon, MapPinIcon, Users2Icon, Ticket, LogOut, PlusCircle } from "lucide-react";
+import { 
+  MapPinIcon, Users2Icon, Ticket, 
+  PlusCircle, LogIn, UserPlus, Clock, DollarSign, 
+  Calendar, Info
+} from "lucide-react";
 import Link from "next/link";
 import { toast, Toaster } from "sonner";
 import EventForm from '../components/EventForm';
+import { Badge } from "@/components/ui/badge";
+import "../components/ticketList.css"; // Reuse ticket styles
 
 interface User {
   id: string;
@@ -123,13 +129,6 @@ export default function HomepageEvents() {
 
   const isOrganizer = user?.role === "Organizer";
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    toast.success("Logged out successfully.");
-    router.push("/");
-  };
-
   const handlePurchase = async (eventId: number) => {
     if (!user) {
       toast.info("Please login to purchase tickets.");
@@ -190,16 +189,52 @@ export default function HomepageEvents() {
     toast.success('Event created successfully!');
   };
 
+  const formatTime = (dateString: string) => {
+    if (!dateString) return 'TBD';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const getTimeUntilEvent = (eventDate: string) => {
+    if (!eventDate) return '';
+    
+    const eventTime = new Date(eventDate).getTime();
+    const now = new Date().getTime();
+    
+    const timeRemaining = eventTime - now;
+    
+    if (timeRemaining <= 0) {
+      return 'Event has started';
+    }
+    
+    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) {
+      return `${days} day${days > 1 ? 's' : ''} ${hours} hour${hours > 1 ? 's' : ''}`;
+    } else if (hours > 0) {
+      const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} min`;
+    } else {
+      const minutes = Math.floor(timeRemaining / (1000 * 60));
+      return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       <Toaster position="top-right" richColors closeButton />
       <div className="container w-full max-w-7xl mx-auto px-4 py-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2">
-          <div>
-            <p className="text-slate-500 mt-1">Find your next adventure!</p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-2">
+          <div className="mb-3 md:mb-0">
+            <p className="text-slate-500">Find your next adventure!</p>
           </div>
 
-          <div className="flex gap-5 mt-2 md:mt-0">
+          <div className="flex w-full md:w-auto gap-5 mt-2 md:mt-0">
             {isAuthLoading ? (
               // Show loading indicator instead of login/register buttons
               <div className="flex items-center">
@@ -207,23 +242,29 @@ export default function HomepageEvents() {
                 <span className="text-sm">Loading...</span>
               </div>
             ) : !user ? (
-              <div className="flex space-x-8">
-                <Link href="/login">
-                  <Button variant="outline" className="fancy-button-secondary group relative overflow-hidden">
-                    <span className="relative z-10 flex items-center justify-center">Login</span>
+              <div className="flex w-full justify-between gap-4 login-register-container">
+                <Link href="/login" className="w-full">
+                  <Button variant="outline" className="fancy-button group relative overflow-hidden w-full h-10">
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <LogIn className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      <span>Login</span>
+                    </span>
                   </Button>
                 </Link>
-                <Link href="/register">
-                  <Button className="fancy-button group relative overflow-hidden">
-                    <span className="relative z-10 flex items-center justify-center">Register</span>
+                <Link href="/register" className="w-full">
+                  <Button className="fancy-button group relative overflow-hidden w-full h-10">
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <UserPlus className="w-4 h-4 transition-transform group-hover:scale-110" />
+                      <span>Register</span>
+                    </span>
                   </Button>
                 </Link>
               </div>
             ) : (
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-3 header-button-container">
                 {user?.role !== 'Organizer' && (
-                  <Link href="/my-tickets" className="mr-4">
-                    <Button variant="secondary" className="fancy-button-accent group relative overflow-hidden">
+                  <Link href="/my-tickets">
+                    <Button variant="secondary" className="fancy-button-accent group relative overflow-hidden w-36 h-10">
                       <span className="relative z-10 flex items-center justify-center gap-2">
                         <Ticket className="w-4 h-4 transition-transform group-hover:rotate-12" />
                         View My Tickets
@@ -235,7 +276,7 @@ export default function HomepageEvents() {
                   <Button 
                     onClick={() => setShowCreateForm(!showCreateForm)}
                     variant="outline"
-                    className="fancy-button-secondary group relative overflow-hidden mr-4"
+                    className="fancy-ticket-button group relative overflow-hidden w-36 h-10"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       <PlusCircle className="w-4 h-4 transition-transform group-hover:scale-110" />
@@ -243,12 +284,6 @@ export default function HomepageEvents() {
                     </span>
                   </Button>
                 )}
-                <Button variant="outline" onClick={handleLogout} className="fancy-button-danger group relative overflow-hidden">
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    Logout
-                  </span>
-                </Button>
               </div>
             )}
           </div>
@@ -275,45 +310,116 @@ export default function HomepageEvents() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-6">
             {events.map((event) => (
-              <Card key={event.id} className="border-0 shadow-md rounded-xl fancy-card overflow-hidden relative group">
-                <CardContent className="p-8">
+              <Card key={event.id} className="border-0 shadow-md rounded-xl fancy-card event-card overflow-hidden relative group">
+                <div className="ticket-top-decoration">
+                  <div className="ticket-hole"></div>
+                  <div className="ticket-hole"></div>
+                  <div className="ticket-hole"></div>
+                </div>
+                <CardContent className="p-6">
                   <div className="fancy-card-gradient absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"></div>
-                  <h3 className="text-2xl font-bold text-gray-800 relative z-10">{event.name}</h3>
-                  <p className="text-slate-600 mb-3 relative z-10">{event.description || "No description."}</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-4 relative z-10">
-                    <div className="flex items-center">
-                      <MapPinIcon className="w-5 h-5 mr-2 text-purple-500" />
-                      {event.location}
-                    </div>
-                    <div className="flex items-center">
-                      <CalendarIcon className="w-5 h-5 mr-2 text-blue-500" />
-                      {formatDate(event.startTime)}
-                    </div>
-                    <div className="flex items-center">
-                      <Users2Icon className="w-5 h-5 mr-2 text-orange-500" />
-                      {event.remaining} spots left
-                    </div>
-                    <div className="flex items-center">
-                      <span className="mr-2 text-green-600 font-semibold">$</span>
-                      {event.capacity}
+                  
+                  {/* Event header with title and time info */}
+                  <div className="ticket-header mb-4">
+                    <div className="ticket-event-name">
+                      <h3 className="text-2xl font-bold text-gray-800 leading-tight">{event.name}</h3>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 countdown-badge">
+                          <Clock className="h-3 w-3 mr-1 text-indigo-500" />
+                          {getTimeUntilEvent(event.startTime)}
+                        </Badge>
+                        <Badge className={event.remaining <= 0 ? "bg-red-500" : "bg-green-500"}>
+                          {event.remaining <= 0 ? "Sold Out" : `${event.remaining} spots left`}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                  <Button
-                    className="w-full text-white font-bold py-3 px-6 fancy-ticket-button relative overflow-hidden group"
-                    onClick={() => handlePurchase(event.id)}
-                    disabled={isOrganizer || event.remaining <= 0}
-                  >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      <Ticket className="w-5 h-5 transition-transform group-hover:rotate-12" />
-                      {!user
-                        ? "Login to Purchase"
-                        : isOrganizer
-                        ? "Cannot Purchase (Organizer)"
-                        : event.remaining <= 0
-                        ? "Not available to purchase"
-                        : "Purchase Ticket"}
-                    </span>
-                  </Button>
+                  
+                  {/* Event description */}
+                  <p className="text-slate-600 mb-4 relative z-10">{event.description || "No description."}</p>
+                  
+                  {/* Event details in a grid layout similar to ticket */}
+                  <div className="ticket-details-grid mb-4 relative z-10">
+                    <div className="ticket-detail-item">
+                      <div className="ticket-detail-icon">
+                        <Calendar className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="ticket-detail-content">
+                        <span className="ticket-detail-label">Date</span>
+                        <span className="ticket-detail-value">{formatDate(event.startTime)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ticket-detail-item">
+                      <div className="ticket-detail-icon">
+                        <Clock className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="ticket-detail-content">
+                        <span className="ticket-detail-label">Time</span>
+                        <span className="ticket-detail-value">{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ticket-detail-item">
+                      <div className="ticket-detail-icon">
+                        <MapPinIcon className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="ticket-detail-content">
+                        <span className="ticket-detail-label">Location</span>
+                        <span className="ticket-detail-value">{event.location}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ticket-detail-item">
+                      <div className="ticket-detail-icon">
+                        <Users2Icon className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="ticket-detail-content">
+                        <span className="ticket-detail-label">Capacity</span>
+                        <span className="ticket-detail-value">{event.capacity} total / {event.remaining} left</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ticket-detail-item">
+                      <div className="ticket-detail-icon">
+                        <Info className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="ticket-detail-content">
+                        <span className="ticket-detail-label">Organizer</span>
+                        <span className="ticket-detail-value">{event.organizer?.email?.split('@')[0] || 'Unknown'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="ticket-detail-item">
+                      <div className="ticket-detail-icon">
+                        <DollarSign className="h-4 w-4 text-indigo-500" />
+                      </div>
+                      <div className="ticket-detail-content">
+                        <span className="ticket-detail-label">Price</span>
+                        <span className="ticket-detail-value font-semibold">${event.capacity}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Purchase button with bottom ticket decoration */}
+                  <div className="ticket-pricing-tier">
+                    <Button
+                      className="w-full text-white font-bold py-3 px-6 fancy-ticket-button relative overflow-hidden group"
+                      onClick={() => handlePurchase(event.id)}
+                      disabled={isOrganizer || event.remaining <= 0}
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        <Ticket className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                        {!user
+                          ? "Login to Purchase"
+                          : isOrganizer
+                          ? "Cannot Purchase (Organizer)"
+                          : event.remaining <= 0
+                          ? "Sold Out"
+                          : "Purchase Ticket"}
+                      </span>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

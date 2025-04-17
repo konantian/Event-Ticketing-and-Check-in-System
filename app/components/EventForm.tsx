@@ -113,8 +113,6 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
         throw new Error(data.message || 'Failed to create event');
       }
       
-      toast.success('Event created successfully!');
-      
       // If an onSubmit callback was provided, call it with the new event
       if (onSubmit && data.event) {
         onSubmit(data.event);

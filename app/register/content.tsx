@@ -26,8 +26,8 @@ export default function RegisterPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-lg p-6">
+    <div className="py-10 px-4">
+      <div className="w-full max-w-md mx-auto bg-white shadow-xl rounded-lg p-6">
         <h1 className="text-2xl font-bold text-center mb-4">Register</h1>
         <Register onRegisterSuccess={handleRegisterSuccess} />
       </div>

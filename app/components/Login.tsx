@@ -56,15 +56,15 @@ function Login({ onLoginSuccess }: LoginProps) {
     <Card className="w-full max-w-md mx-auto fancy-card overflow-hidden relative">
       <div className="fancy-card-gradient absolute inset-0 opacity-5"></div>
       <Toaster position="top-right" richColors closeButton />
-      <CardHeader className="space-y-1 mb-4 relative z-10">
-        <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-        <CardDescription className="text-center text-gray-500">Enter your credentials to access your account</CardDescription>
+      <CardHeader className="space-y-4 mb-6 relative z-10 pt-8">
+        <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
+        <CardDescription className="text-center text-gray-500 text-lg">Enter your credentials to access your account</CardDescription>
       </CardHeader>
-      <CardContent className="relative z-10">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+      <CardContent className="relative z-10 pb-8 px-8">
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div className="space-y-4">
             <label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-              <Mail className="h-4 w-4 text-indigo-500" />
+              <Mail className="h-5 w-5 text-indigo-500" />
               Email
             </label>
             <Input
@@ -75,12 +75,12 @@ function Login({ onLoginSuccess }: LoginProps) {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
-              className="border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
+              className="border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all p-6 text-lg"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-4">
             <label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
-              <Lock className="h-4 w-4 text-indigo-500" />
+              <Lock className="h-5 w-5 text-indigo-500" />
               Password
             </label>
             <Input
@@ -91,23 +91,23 @@ function Login({ onLoginSuccess }: LoginProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
-              className="border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
+              className="border-indigo-100 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all p-6 text-lg"
             />
           </div>
           <Button 
             type="submit" 
-            className="w-full fancy-button group relative overflow-hidden mt-6" 
+            className="w-full fancy-ticket-button group relative overflow-hidden mt-8 py-6 text-lg" 
             disabled={isLoading}
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
+            <span className="relative z-10 flex items-center justify-center gap-3">
               {isLoading ? (
                 <>
-                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
                   <span>Logging in...</span>
                 </>
               ) : (
                 <>
-                  <LogIn className="w-4 h-4" />
+                  <LogIn className="w-5 h-5 transition-transform group-hover:rotate-12" />
                   <span>Login</span>
                 </>
               )}

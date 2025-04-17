@@ -108,8 +108,8 @@ function Register({ onRegisterSuccess }: RegisterProps) {
         <CardDescription className="text-center">Enter your details to sign up</CardDescription>
       </CardHeader>
       <CardContent className="relative z-10">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="space-y-3">
             <label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
               <Mail className="h-4 w-4 text-indigo-500" />
               Email
@@ -126,7 +126,7 @@ function Register({ onRegisterSuccess }: RegisterProps) {
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label htmlFor="password" className="text-sm font-medium flex items-center gap-2">
               <Lock className="h-4 w-4 text-indigo-500" />
               Password
@@ -143,7 +143,7 @@ function Register({ onRegisterSuccess }: RegisterProps) {
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label htmlFor="confirmPassword" className="text-sm font-medium flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-indigo-500" />
               Confirm Password
@@ -168,7 +168,7 @@ function Register({ onRegisterSuccess }: RegisterProps) {
             )}
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label htmlFor="role" className="text-sm font-medium flex items-center gap-2">
               <Users className="h-4 w-4 text-indigo-500" />
               Role

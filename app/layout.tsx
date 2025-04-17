@@ -16,9 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
         <Toaster position="top-right" richColors closeButton />
         <Header />
-        <div className="flex-grow">
+        <main>
           {children}
-        </div>
+        </main>
         <Footer />
         <Analytics />
       </body>

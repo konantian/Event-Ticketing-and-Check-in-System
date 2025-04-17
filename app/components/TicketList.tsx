@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Ticket, Calendar, User, MapPin, Clock, QrCode, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
+import { 
+  Ticket, Calendar, MapPin, Clock, QrCode, CheckCircle2, 
+   CalendarDays, RefreshCcw, Tag, Info 
+} from "lucide-react";
 import { toast, Toaster } from 'sonner';
 import Link from 'next/link';
 import './ticketList.css';
@@ -32,26 +35,12 @@ function TicketList() {
   const [isLoading, setIsLoading] = useState(true);
   const [showQrCode, setShowQrCode] = useState<number | null>(null);
   const [networkIP, setNetworkIP] = useState<string>("");
-
-  // Helper function to determine price class based on price range
-  const getPriceClass = (price: number) => {
-    if (price >= 200) return 'price-premium';
-    if (price >= 100) return 'price-high';
-    if (price >= 50) return 'price-medium';
-    return 'price-standard';
-  };
-
+  const [isRefunding, setIsRefunding] = useState<number | null>(null);
+  
   // Set up local network IP notice for development
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        // Show instructions for a better QR code in development
-        console.log('DEVELOPER NOTICE: For QR code scanning from mobile devices:');
-        console.log('1. Find your computer\'s local IP on your network (e.g., 192.168.x.x)');
-        console.log('2. Set "NEXT_PUBLIC_LOCAL_IP=your-ip-address" in your .env file');
-        console.log('3. Restart the development server');
-      }
       
       // Try to get the IP from environment variable if set
       if (process.env.NEXT_PUBLIC_LOCAL_IP) {
@@ -120,6 +109,59 @@ function TicketList() {
     
     fetchTickets();
   }, []);
+  
+  // Handle ticket refund
+  const refundTicket = async (ticketId: number) => {
+    // Set refunding state to show loading indicator
+    setIsRefunding(ticketId);
+    
+    try {
+      // Get auth token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Authentication required. Please log in again.');
+        setIsRefunding(null);
+        return;
+      }
+      
+      // Call API to process refund
+      const response = await fetch(`/api/tickets/refund`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ticketId })
+      });
+      
+      // Check response status first
+      if (!response.ok) {
+        let errorMessage = `Failed to process refund. Status: ${response.status}`;
+        try {
+          // Try to parse as JSON but handle cases where it's not valid JSON
+          const text = await response.text();
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          // If JSON parsing fails, just use status code message
+          console.error('Could not parse error response as JSON', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+      
+      // If successful, remove the ticket from the list
+      setTickets(prevTickets => prevTickets.filter(ticket => ticket.id !== ticketId));
+      
+      // Show success message
+      toast.success('Ticket refunded successfully! Funds will be returned to your original payment method.');
+    } catch (error) {
+      console.error('Error refunding ticket:', error);
+      toast.error(error.message || 'Failed to process refund. Please try again later.');
+    } finally {
+      // Reset refunding state
+      setIsRefunding(null);
+    }
+  };
 
   // Generate a QR code URL using the ticket's actual QR code data
   const generateQrCode = (ticket: TicketType) => {
@@ -248,101 +290,134 @@ function TicketList() {
                   >
                     <div className="ticket-card-wrapper">
                       <div className="ticket-body">
+                        {/* Top ticket decoration */}
+                        <div className="ticket-top-decoration">
+                          <div className="ticket-hole"></div>
+                          <div className="ticket-hole"></div>
+                          <div className="ticket-hole"></div>
+                        </div>
+                        
                         {/* Main ticket content */}
                         <div className="ticket-content">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="font-bold text-xl text-gray-900">{ticket.event?.name || 'Event Name'}</h3>
-                              <div className="flex items-center text-gray-500 mt-1">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                <span>{formatDate(ticket.event?.startTime)}</span>
+                          <div className="ticket-header">
+                            <div className="ticket-event-name">
+                              <h3 className="text-xl font-bold text-gray-900 leading-tight">{ticket.event?.name || 'Event Name'}</h3>
+                              <div className="flex items-center gap-1 mt-1">
+                                <Badge className={ticket.checkIn ? "bg-green-500 hover:bg-green-600" : "bg-amber-500 hover:bg-amber-600"}>
+                                  {ticket.checkIn ? "Checked In" : "Not Checked In"}
+                                </Badge>
                               </div>
                             </div>
-                            <Badge className={ticket.checkIn ? "bg-green-500 hover:bg-green-600" : "bg-amber-500 hover:bg-amber-600"}>
-                              {ticket.checkIn ? "Checked In" : "Not Checked In"}
-                            </Badge>
                           </div>
                           
-                          <div className="space-y-2 mb-4">
-                            <div className="flex items-center text-gray-600">
-                              <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                              <span>{formatTime(ticket.event?.startTime)} - {formatTime(ticket.event?.endTime)}</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                              <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                              <span>{ticket.event?.location || 'Venue TBD'}</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                              <Ticket className="h-4 w-4 mr-2 text-gray-400" />
-                              <span>Ticket ID: {ticket.id}</span>
-                            </div>
-                            <div className="flex items-center">
-                              {ticket.checkIn ? (
-                                <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                              ) : (
-                                <XCircle className="h-4 w-4 mr-2 text-amber-500" />
-                              )}
-                              <span className={`text-sm ${ticket.checkIn ? 'text-green-600' : 'text-amber-600'}`}>
-                                {ticket.checkIn === null ? 'Not Checked in yet' :
-                                `Checked In: ${formatCheckInTime(ticket.checkIn?.timestamp)}`}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center space-x-6">
-                              {ticket.tier?.toLowerCase() === 'vip' ? (
-                                <div className="fancy-tier vip-tier">
-                                  <span className="vip-star">★</span>
-                                  <span className="tier-text">VIP</span>
-                                </div>
-                              ) : ticket.tier?.toLowerCase().includes('premium') || ticket.tier?.toLowerCase().includes('platinum') ? (
-                                <div className="fancy-tier premium-tier">
-                                  <span className="premium-diamond">♦</span>
-                                  <span className="tier-text">{ticket.tier}</span>
-                                </div>
-                              ) : ticket.tier?.toLowerCase().includes('gold') ? (
-                                <div className="fancy-tier gold-tier">
-                                  <span className="gold-symbol">●</span>
-                                  <span className="tier-text">{ticket.tier}</span>
-                                </div>
-                              ) : (
-                                <div className="fancy-tier standard-tier">
-                                  <span className="tier-text">{ticket.tier || 'General'}</span>
-                                </div>
-                              )}
-                              <div className={`price-badge ${getPriceClass(ticket.price || 0)}`}>
-                                <span className="price-currency">$</span>
-                                <span className="price-amount">{ticket.price || '0'}</span>
-                                {ticket.price && ticket.price >= 100 && (
-                                  <span className="price-sparkle">✨</span>
-                                )}
+                          {/* Ticket details in a more organized layout */}
+                          <div className="ticket-details-grid">
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                <Calendar className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Date</span>
+                                <span className="ticket-detail-value">{formatDate(ticket.event?.startTime)}</span>
                               </div>
                             </div>
                             
-                            <div className="flex space-x-2">
-                              {!ticket.checkIn && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="fancy-button-secondary group relative overflow-hidden" 
-                                  onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
-                                >
-                                  <span className="relative z-10 flex items-center justify-center gap-2">
-                                    <QrCode className="h-4 w-4 transition-transform group-hover:rotate-12" />
-                                    {ticket.id === showQrCode ? 'Hide QR' : 'View QR'}
-                                  </span>
-                                </Button>
-                              )}
-
-                              {ticket.checkIn && (
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                  <span className="text-green-600 text-sm font-medium">
-                                    Checked In Successfully
-                                  </span>
-                                </div>
-                              )}
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                <Clock className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Time</span>
+                                <span className="ticket-detail-value">{formatTime(ticket.event?.startTime)} - {formatTime(ticket.event?.endTime)}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                <MapPin className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Location</span>
+                                <span className="ticket-detail-value">{ticket.event?.location || 'Venue TBD'}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                <Tag className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Tier</span>
+                                <span className="ticket-detail-value">{ticket.tier || 'General'}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                <Ticket className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Ticket ID</span>
+                                <span className="ticket-detail-value">#{ticket.id}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                {ticket.checkIn ? (
+                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <Info className="h-4 w-4 text-amber-500" />
+                                )}
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Status</span>
+                                <span className={`ticket-detail-value ${ticket.checkIn ? 'text-green-600' : 'text-amber-600'}`}>
+                                  {ticket.checkIn === null ? 'Not Checked in yet' :
+                                  `Checked In: ${formatCheckInTime(ticket.checkIn?.timestamp)}`}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Pricing and tiers section */}
+                          <div className="ticket-pricing-tier">
+                            <div className="flex justify-between items-center w-full">
+                              <div></div>
+                              
+                              <div className="flex-shrink-0">
+                                {!ticket.checkIn && (
+                                  <div className="flex items-center gap-2 button-container">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="fancy-button-danger group relative overflow-hidden w-28 h-9" 
+                                      onClick={() => refundTicket(ticket.id)}
+                                      disabled={isRefunding === ticket.id}
+                                    >
+                                      <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {isRefunding === ticket.id ? (
+                                          <RefreshCcw className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <span className="text-red-500">↺</span>
+                                        )}
+                                        Refund
+                                      </span>
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="fancy-button-secondary group relative overflow-hidden w-28 h-9" 
+                                      onClick={() => setShowQrCode(ticket.id === showQrCode ? null : ticket.id)}
+                                    >
+                                      <span className="relative z-10 flex items-center justify-center gap-2">
+                                        <QrCode className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                                        {ticket.id === showQrCode ? 'Hide QR' : 'View QR'}
+                                      </span>
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
