@@ -129,7 +129,7 @@ export default function HomepageEvents() {
 
   const isOrganizer = user?.role === "Organizer";
 
-  const handlePurchase = async (eventId: number) => {
+  const handlePurchase = (eventId: number) => {
     if (!user) {
       toast.info("Please login to purchase tickets.");
       router.push(`/login?redirect=/homepage`);
@@ -141,36 +141,7 @@ export default function HomepageEvents() {
       return;
     }
 
-    try {
-      const response = await fetch(`/api/tickets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          eventId,
-          tier: 'General', // Example tier
-          discountCode: null // Add discount code if applicable
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        toast.success('Ticket purchased successfully!');
-        
-        // Delay redirect for 1 seconds to show the success message
-        setTimeout(() => {
-          router.push("/my-tickets");
-        }, 1000);
-      } else {
-        toast.error(data.message || 'Failed to purchase ticket');
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      toast.error(error.message || 'Failed to purchase ticket');
-    }
+    router.push(`/purchase/${eventId}`);
   };
 
   const formatDate = (date: string) =>
