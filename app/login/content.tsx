@@ -16,8 +16,6 @@ export default function LoginPageContent() {
   }, [searchParams]);
 
   const handleLoginSuccess = (user: any) => {
-    toast.success("Login successful!");
-    
     // Force reload when redirecting to properly refresh the user state
     if (redirect.startsWith('/homepage')) {
       window.location.href = redirect;

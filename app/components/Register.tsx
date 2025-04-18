@@ -102,7 +102,6 @@ function Register({ onRegisterSuccess }: RegisterProps) {
   return (
     <Card className="w-full max-w-md mx-auto fancy-card overflow-hidden relative">
       <div className="fancy-card-gradient absolute inset-0 opacity-5"></div>
-      <Toaster position="top-right" richColors closeButton />
       <CardHeader className="relative z-10">
         <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
         <CardDescription className="text-center">Enter your details to sign up</CardDescription>

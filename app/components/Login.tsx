@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { LogIn, Mail, Lock } from "lucide-react";
 
 interface User {
@@ -43,7 +43,9 @@ function Login({ onLoginSuccess }: LoginProps) {
       const data = await response.json();
       localStorage.setItem('token', data.token);
       toast.success('Login successful!');
-      onLoginSuccess(data.user);
+      setTimeout(() => {
+        onLoginSuccess(data.user);
+      }, 1000);
     } catch (error: any) {
       setError(error.message || 'Something went wrong');
       toast.error(error.message || 'Something went wrong');
@@ -55,7 +57,6 @@ function Login({ onLoginSuccess }: LoginProps) {
   return (
     <Card className="w-full max-w-md mx-auto fancy-card overflow-hidden relative">
       <div className="fancy-card-gradient absolute inset-0 opacity-5"></div>
-      <Toaster position="top-right" richColors closeButton />
       <CardHeader className="space-y-4 mb-6 relative z-10 pt-8">
         <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
         <CardDescription className="text-center text-gray-500 text-lg">Enter your credentials to access your account</CardDescription>
