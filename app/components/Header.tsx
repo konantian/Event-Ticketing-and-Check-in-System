@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Menu, Ticket, CalendarDays, User, ArrowLeft, Home, LogOut } from 'lucide-react';
+import { Ticket, CalendarDays, User, Home, LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 

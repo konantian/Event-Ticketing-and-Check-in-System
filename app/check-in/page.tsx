@@ -13,7 +13,6 @@ function CheckInContent() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [ticketInfo, setTicketInfo] = useState(null);
 
   // Handle automatic check-in on page load
   useEffect(() => {
@@ -61,7 +60,6 @@ function CheckInContent() {
         // Add a 1-second delay to ensure users can see the toast message
         setTimeout(() => {
           setSuccess(true);
-          setTicketInfo(data.ticket);
         }, 1000);
       } else {
         setError(data.message || 'Check-in failed');

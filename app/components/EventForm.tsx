@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from 'sonner';
 import { CalendarDays, Clock, MapPin, Users, PenBox, ClipboardList, PlusCircle } from 'lucide-react';
 

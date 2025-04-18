@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import HomepageEvents from './homepage/page';
 
 export default function HomePage() {

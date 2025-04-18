@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Register from "../components/Register";
-import { toast } from "sonner";
 
 export default function RegisterPageContent() {
   const router = useRouter();

@@ -38,8 +38,6 @@ This command will create:
 
 🧑 One Attendee user
 
-🧑‍🔧 One Staff user
-
 Three sample events owned by the Organizer
 
 ## Users
@@ -75,7 +73,7 @@ Explore relationships across tables
     - `id`: Primary Key
     - `email`: Unique identifier for the user
     - `password`: Hashed password
-    - `role`: User role (Organizer, Staff, Attendee)
+    - `role`: User role (Organizer, Attendee)
     - `createdAt`: Timestamp of user creation (Optional)
     - `updatedAt`: Timestamp of last update (Optional)
 

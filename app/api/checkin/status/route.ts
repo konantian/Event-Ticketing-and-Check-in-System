@@ -37,6 +37,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Verify if the current user is the organizer of this event
+    if (Number(user.id) !== event.organizerId) {
+      return NextResponse.json(
+        { success: false, message: 'Only the event organizer can view check-in status' },
+        { status: 403 }
+      );
+    }
+
     // Get check-in statistics
     const totalTickets = await prisma.ticket.count({
       where: { eventId: Number(eventId) },

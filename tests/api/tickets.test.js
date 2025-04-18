@@ -345,7 +345,7 @@ describe("Tickets API", () => {
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe("Unauthorized to view this ticket");
+      expect(res.body.message).toBe("Unauthorized to access this ticket");
     });
 
     it("should return 404 for non-existent ticket", async () => {

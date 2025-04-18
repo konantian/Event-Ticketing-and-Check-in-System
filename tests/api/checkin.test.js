@@ -6,13 +6,13 @@ const jwt = require("jsonwebtoken");
 
 describe("Check-in API", () => {
   let organizer;
-  let staff;
   let attendee;
   let organizerToken;
-  let staffToken;
   let attendeeToken;
   let testEvent;
   let testTicket;
+  let anotherOrganizer;
+  let anotherOrganizerToken;
 
   const sampleEvent = {
     name: "Test Event",
@@ -40,19 +40,20 @@ describe("Check-in API", () => {
       }
     });
 
-    staff = await prisma.user.create({
-      data: {
-        email: "staff@test.com",
-        password: "hashedpassword",
-        role: "Staff"
-      }
-    });
-
     attendee = await prisma.user.create({
       data: {
         email: "attendee@test.com",
         password: "hashedpassword",
         role: "Attendee"
+      }
+    });
+
+    // Create a second organizer for testing
+    anotherOrganizer = await prisma.user.create({
+      data: {
+        email: "organizer2@test.com",
+        password: "hashedpassword",
+        role: "Organizer"
       }
     });
 
@@ -62,13 +63,13 @@ describe("Check-in API", () => {
       process.env.JWT_SECRET
     );
 
-    staffToken = jwt.sign(
-      { userId: staff.id.toString(), email: staff.email, role: staff.role },
+    attendeeToken = jwt.sign(
+      { userId: attendee.id.toString(), email: attendee.email, role: attendee.role },
       process.env.JWT_SECRET
     );
 
-    attendeeToken = jwt.sign(
-      { userId: attendee.id.toString(), email: attendee.email, role: attendee.role },
+    anotherOrganizerToken = jwt.sign(
+      { userId: anotherOrganizer.id.toString(), email: anotherOrganizer.email, role: anotherOrganizer.role },
       process.env.JWT_SECRET
     );
 
@@ -105,20 +106,7 @@ describe("Check-in API", () => {
       await prisma.checkIn.deleteMany();
     });
 
-    it("should check in a ticket when staff is authenticated", async () => {
-      const res = await request(serverUrl)
-        .post("/api/checkin")
-        .set("Authorization", `Bearer ${staffToken}`)
-        .send({ qrCodeData: testTicket.qrCodeData });
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe("Check-in successful");
-      expect(res.body.checkIn.ticketId).toBe(testTicket.id);
-      expect(res.body.checkIn.status).toBe("Checked In");
-    });
-
-    it("should check in a ticket when organizer is authenticated", async () => {
+    it("should check in a ticket when event organizer is authenticated", async () => {
       const res = await request(serverUrl)
         .post("/api/checkin")
         .set("Authorization", `Bearer ${organizerToken}`)
@@ -150,10 +138,21 @@ describe("Check-in API", () => {
       expect(res.body.message).toBe("Forbidden");
     });
 
+    it("should return 403 when a different organizer tries to check in", async () => {
+      const res = await request(serverUrl)
+        .post("/api/checkin")
+        .set("Authorization", `Bearer ${anotherOrganizerToken}`)
+        .send({ qrCodeData: testTicket.qrCodeData });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe("Only the event organizer can check in attendees");
+    });
+
     it("should return 400 when QR code data is missing", async () => {
       const res = await request(serverUrl)
         .post("/api/checkin")
-        .set("Authorization", `Bearer ${staffToken}`)
+        .set("Authorization", `Bearer ${organizerToken}`)
         .send({});
 
       expect(res.status).toBe(400);
@@ -164,7 +163,7 @@ describe("Check-in API", () => {
     it("should return 404 for invalid QR code", async () => {
       const res = await request(serverUrl)
         .post("/api/checkin")
-        .set("Authorization", `Bearer ${staffToken}`)
+        .set("Authorization", `Bearer ${organizerToken}`)
         .send({ qrCodeData: "invalid-qr-code" });
 
       expect(res.status).toBe(404);
@@ -176,13 +175,13 @@ describe("Check-in API", () => {
       // First check-in
       await request(serverUrl)
         .post("/api/checkin")
-        .set("Authorization", `Bearer ${staffToken}`)
+        .set("Authorization", `Bearer ${organizerToken}`)
         .send({ qrCodeData: testTicket.qrCodeData });
 
       // Try to check in again
       const res = await request(serverUrl)
         .post("/api/checkin")
-        .set("Authorization", `Bearer ${staffToken}`)
+        .set("Authorization", `Bearer ${organizerToken}`)
         .send({ qrCodeData: testTicket.qrCodeData });
 
       expect(res.status).toBe(400);
@@ -196,29 +195,7 @@ describe("Check-in API", () => {
       await prisma.checkIn.deleteMany();
     });
 
-    it("should return check-in status when staff is authenticated", async () => {
-      // Create a check-in
-      await prisma.checkIn.create({
-        data: {
-          ticketId: testTicket.id,
-          status: "Checked In"
-        }
-      });
-
-      const res = await request(serverUrl)
-        .get(`/api/checkin/status?eventId=${testEvent.id}`)
-        .set("Authorization", `Bearer ${staffToken}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.stats.totalTickets).toBe(1);
-      expect(res.body.stats.checkedInTickets).toBe(1);
-      expect(res.body.stats.checkedInPercentage).toBe(100);
-      expect(Array.isArray(res.body.checkedInAttendees)).toBe(true);
-      expect(res.body.checkedInAttendees.length).toBe(1);
-    });
-
-    it("should return check-in status when organizer is authenticated", async () => {
+    it("should return check-in status when event organizer is authenticated", async () => {
       const res = await request(serverUrl)
         .get(`/api/checkin/status?eventId=${testEvent.id}`)
         .set("Authorization", `Bearer ${organizerToken}`);
@@ -247,10 +224,20 @@ describe("Check-in API", () => {
       expect(res.body.message).toBe("Forbidden");
     });
 
+    it("should return 403 when a different organizer tries to access status", async () => {
+      const res = await request(serverUrl)
+        .get(`/api/checkin/status?eventId=${testEvent.id}`)
+        .set("Authorization", `Bearer ${anotherOrganizerToken}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe("Only the event organizer can view check-in status");
+    });
+
     it("should return 400 when event ID is missing", async () => {
       const res = await request(serverUrl)
         .get("/api/checkin/status")
-        .set("Authorization", `Bearer ${staffToken}`);
+        .set("Authorization", `Bearer ${organizerToken}`);
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -260,7 +247,7 @@ describe("Check-in API", () => {
     it("should return 404 for non-existent event", async () => {
       const res = await request(serverUrl)
         .get("/api/checkin/status?eventId=999999")
-        .set("Authorization", `Bearer ${staffToken}`);
+        .set("Authorization", `Bearer ${organizerToken}`);
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);

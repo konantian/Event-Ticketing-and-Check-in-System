@@ -109,7 +109,7 @@ describe("Authentication API", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe("Invalid role. Role must be one of: Attendee, Organizer, Admin");
+      expect(res.body.message).toBe("Invalid role. Role must be one of: Attendee, Organizer");
     });
 
     it("should handle whitespace in email", async () => {

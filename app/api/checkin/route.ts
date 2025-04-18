@@ -12,6 +12,11 @@ export async function POST(req: NextRequest) {
       return unauthorized();
     }
 
+    // Check if the user is an organizer
+    if (!isRole(user, ['Organizer'])) {
+      return forbidden();
+    }
+
     const body = await req.json();
     const { qrCodeData } = body;
 
@@ -41,6 +46,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Invalid QR code' },
         { status: 404 }
+      );
+    }
+
+    // Verify if the current user is the organizer of this event
+    if (Number(user.id) !== ticket.event.organizerId) {
+      return NextResponse.json(
+        { success: false, message: 'Only the event organizer can check in attendees' },
+        { status: 403 }
       );
     }
 

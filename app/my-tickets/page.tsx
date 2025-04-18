@@ -4,9 +4,7 @@ import TicketList from "../components/TicketList";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+
 
 export default function MyTicketsPage() {
   const [user, setUser] = useState(null);
