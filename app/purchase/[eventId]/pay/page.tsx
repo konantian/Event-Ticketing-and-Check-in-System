@@ -2,9 +2,10 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Calendar, Clock, DollarSign, MapPin, Users2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -91,41 +92,136 @@ export default function PaymentPage() {
     }
   };
 
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  const formatTime = (date: string) =>
+    new Date(date).toLocaleTimeString("en-US", {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
   return (
-    <div className="max-w-xl mx-auto mt-10 p-4 border rounded shadow-sm bg-white">
-      <h2 className="text-2xl font-bold mb-2">Complete Your Purchase</h2>
+    <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
+      <div className="container max-w-2xl mx-auto px-4 py-10">
+        <h2 className="text-3xl font-bold mb-6">🎟️ Complete Your Purchase</h2>
 
-      {event ? (
-        <div className="mb-6">
-          <p className="text-lg font-semibold">{event.name}</p>
-          <p className="text-sm text-gray-600">{new Date(event.startTime).toLocaleString()}</p>
-          <p className="text-sm text-gray-600 mb-1">Location: {event.location}</p>
-          <p className="text-sm">Tier: <strong>{tier}</strong></p>
-          <p className="text-sm">Discount: {discountCode || 'None'}</p>
-          <p className="text-lg font-bold mt-2">Total: ${finalPrice.toFixed(2)}</p>
-        </div>
-      ) : (
-        <p className="text-sm text-gray-500 mb-4">Loading event info...</p>
-      )}
+        {event ? (
+          <div className="bg-white shadow-md rounded-xl fancy-card relative group mb-8 overflow-hidden">
+            <div className="ticket-top-decoration">
+              <div className="ticket-hole"></div>
+              <div className="ticket-hole"></div>
+              <div className="ticket-hole"></div>
+            </div>
+            <div className="p-6">
+              <div className="fancy-card-gradient absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity"></div>
 
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Credit / Debit (mock only)
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            className="w-full border rounded px-3 py-2 text-sm text-gray-500 bg-gray-100 pr-10"
-            disabled
-            placeholder="**** **** **** 4242"
-          />
-          <CreditCard className="absolute right-3 top-2.5 text-gray-400 w-5 h-5" />
+              <div className="ticket-header mb-4">
+                <div className="ticket-event-name">
+                  <h3 className="text-2xl font-bold text-gray-800 leading-tight">{event.name}</h3>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Badge className="bg-green-500">{event.remaining} spots left</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-slate-600 mb-4 relative z-10">{event.description}</p>
+
+              <div className="ticket-details-grid mb-4 relative z-10">
+                <div className="ticket-detail-item">
+                  <div className="ticket-detail-icon">
+                    <Calendar className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="ticket-detail-content">
+                    <span className="ticket-detail-label">Date</span>
+                    <span className="ticket-detail-value">{formatDate(event.startTime)}</span>
+                  </div>
+                </div>
+
+                <div className="ticket-detail-item">
+                  <div className="ticket-detail-icon">
+                    <Clock className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="ticket-detail-content">
+                    <span className="ticket-detail-label">Time</span>
+                    <span className="ticket-detail-value">{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
+                  </div>
+                </div>
+
+                <div className="ticket-detail-item">
+                  <div className="ticket-detail-icon">
+                    <MapPin className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="ticket-detail-content">
+                    <span className="ticket-detail-label">Location</span>
+                    <span className="ticket-detail-value">{event.location}</span>
+                  </div>
+                </div>
+
+                <div className="ticket-detail-item">
+                  <div className="ticket-detail-icon">
+                    <Users2 className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="ticket-detail-content">
+                    <span className="ticket-detail-label">Capacity</span>
+                    <span className="ticket-detail-value">{event.capacity} total / {event.remaining} left</span>
+                  </div>
+                </div>
+
+                <div className="ticket-detail-item">
+                  <div className="ticket-detail-icon">
+                    <Info className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="ticket-detail-content">
+                    <span className="ticket-detail-label">Tier</span>
+                    <span className="ticket-detail-value">{tier}</span>
+                  </div>
+                </div>
+
+                <div className="ticket-detail-item">
+                  <div className="ticket-detail-icon">
+                    <DollarSign className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="ticket-detail-content">
+                    <span className="ticket-detail-label">Total</span>
+                    <span className="ticket-detail-value font-semibold text-green-700">${finalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 mb-4">Loading event info...</p>
+        )}
+
+        <div className="bg-white rounded-lg p-6 shadow mb-8">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Credit / Debit (mock only)
+          </label>
+          <div className="relative mb-6">
+            <input
+              type="text"
+              className="w-full border rounded px-3 py-2 text-sm text-gray-500 bg-gray-100 pr-10"
+              disabled
+              placeholder="**** **** **** 4242"
+            />
+            <CreditCard className="absolute right-3 top-2.5 text-gray-400 w-5 h-5" />
+          </div>
+
+          <Button
+            onClick={handlePurchase}
+            disabled={processing || !event}
+            className="w-full fancy-ticket-button"
+          >
+            {processing ? 'Processing...' : 'Confirm Purchase'}
+          </Button>
         </div>
       </div>
-
-      <Button onClick={handlePurchase} disabled={processing || !event} className="w-full">
-        {processing ? 'Processing...' : 'Confirm Purchase'}
-      </Button>
     </div>
   );
 }

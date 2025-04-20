@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
-// GET /api/events/[id]
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
+// ✅ GET /api/events/[id]
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const eventId = parseInt(context.params.id);
+    const eventId = parseInt(params.id, 10);
 
     if (isNaN(eventId)) {
       return NextResponse.json(
@@ -54,15 +57,17 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-// PUT /api/events/[id]
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+// ✅ PUT /api/events/[id]
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const { authorized, user } = await verifyAuth(req);
     if (!authorized || !user) return unauthorized();
-
     if (!isRole(user, ['Organizer'])) return forbidden();
 
-    const eventId = parseInt(context.params.id);
+    const eventId = parseInt(params.id, 10);
     if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid event ID' },
