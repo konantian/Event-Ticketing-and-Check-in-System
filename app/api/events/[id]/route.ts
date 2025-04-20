@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
 
-// ✅ GET /api/events/[id]
+// GET /api/events/[id]
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const eventId = parseInt(params.id, 10);
+    const { id } = await context.params;
+    const eventId = parseInt(id);
 
     if (isNaN(eventId)) {
       return NextResponse.json(
@@ -57,17 +58,15 @@ export async function GET(
   }
 }
 
-// ✅ PUT /api/events/[id]
+// PUT /api/events/[id]
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { authorized, user } = await verifyAuth(req);
-    if (!authorized || !user) return unauthorized();
-    if (!isRole(user, ['Organizer'])) return forbidden();
+    const { id } = await context.params;
+    const eventId = parseInt(id);
 
-    const eventId = parseInt(params.id, 10);
     if (isNaN(eventId)) {
       return NextResponse.json(
         { success: false, message: 'Invalid event ID' },
@@ -75,16 +74,12 @@ export async function PUT(
       );
     }
 
+    const { authorized, user } = await verifyAuth(req);
+    if (!authorized || !user) return unauthorized();
+    if (!isRole(user, ['Organizer'])) return forbidden();
+
     const body = await req.json();
-    const {
-      name,
-      description,
-      location,
-      capacity,
-      price,
-      startTime,
-      endTime,
-    } = body;
+    const { name, description, location, capacity, price, startTime, endTime } = body;
 
     if (!name || !description || !location || !capacity || !price || !startTime || !endTime) {
       return NextResponse.json(
@@ -113,6 +108,58 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Event update error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/events/[id]
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const eventId = parseInt(id);
+
+    if (isNaN(eventId)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid event ID' },
+        { status: 400 }
+      );
+    }
+
+    const { authorized, user } = await verifyAuth(req);
+    if (!authorized || !user) return unauthorized();
+
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      return NextResponse.json(
+        { success: false, message: 'Event not found' },
+        { status: 404 }
+      );
+    }
+
+    // Only organizer can delete their own event
+    if (event.organizerId !== Number(user.id) && !isRole(user, ['Organizer'])) {
+      return forbidden();
+    }
+
+    await prisma.event.delete({
+      where: { id: eventId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Event deleted successfully',
+    });
+  } catch (error) {
+    console.error('Event deletion error:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
