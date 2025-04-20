@@ -31,6 +31,7 @@ interface Event {
   startTime: string;
   endTime: string;
   createdAt: string;
+  price: number;
   updatedAt: string;
   organizerId: number;
   organizer: {
@@ -367,7 +368,7 @@ export default function HomepageEvents() {
                       </div>
                       <div className="ticket-detail-content">
                         <span className="ticket-detail-label">Price</span>
-                        <span className="ticket-detail-value font-semibold">${event.capacity}</span>
+                        <span className="ticket-detail-value font-semibold">${event.price}</span>
                       </div>
                     </div>
                   </div>

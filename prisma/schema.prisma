@@ -25,6 +25,7 @@ model Event {
   capacity    Int
   remaining   Int       // Track remaining tickets
   location    String
+  price       Float
   startTime   DateTime
   endTime     DateTime
   createdAt   DateTime  @default(now())

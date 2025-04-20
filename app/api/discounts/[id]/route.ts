@@ -1,43 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-import { verifyAuth, unauthorized, forbidden, isRole } from '@/app/lib/auth';
+import { verifyAuth, unauthorized } from '@/app/lib/auth';
 
-interface Params {
-  params: Promise<{ id: string }>;
-}
-
-export async function GET(
-  req: NextRequest,
-  { params }: Params
-) {
+export async function GET(req: NextRequest) {
   try {
-    const { id } = await params;
+    const code = req.nextUrl.searchParams.get('code');
 
-    // Verify authentication (only Organizers can access discount details)
-    const { authorized, user, error } = await verifyAuth(req);
+    if (!code) {
+      return NextResponse.json(
+        { success: false, message: 'Discount code is required' },
+        { status: 400 }
+      );
+    }
+
+    const { authorized, user } = await verifyAuth(req);
 
     if (!authorized || !user) {
       return unauthorized();
     }
 
-    if (!isRole(user, ['Organizer'])) {
-      return forbidden();
-    }
-
-    if (!id || isNaN(parseInt(id))) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid discount ID' },
-        { status: 400 }
-      );
-    }
-
-    const discount = await prisma.discount.findUnique({
-      where: { id: parseInt(id) },
+    const discount = await prisma.discount.findFirst({
+      where: { code },
     });
 
     if (!discount) {
       return NextResponse.json(
-        { success: false, message: 'Discount not found' },
+        { success: false, message: 'Invalid discount code' },
         { status: 404 }
       );
     }
@@ -47,10 +35,10 @@ export async function GET(
       discount,
     });
   } catch (error) {
-    console.error('Discount fetch error:', error);
+    console.error('Discount validate error:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
     );
   }
-} 
+}

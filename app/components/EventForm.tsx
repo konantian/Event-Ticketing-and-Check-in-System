@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from 'sonner';
-import { CalendarDays, Clock, MapPin, Users, PenBox, ClipboardList, PlusCircle } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Users, PenBox, ClipboardList, PlusCircle, DollarSign } from 'lucide-react';
 
 interface Event {
   id: string;
@@ -27,6 +27,7 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [capacity, setCapacity] = useState<string>('');
+  const [price, setPrice] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
@@ -102,6 +103,7 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
           description, 
           capacity: parseInt(capacity) || 0, 
           location, 
+          price,
           startTime,
           endTime 
         }),
@@ -125,6 +127,7 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
       setLocation('');
       setStartTime('');
       setEndTime('');
+      setPrice('');
       setEndTimeError('');
     } catch (error: any) {
       toast.error(error.message || 'Something went wrong');
@@ -219,6 +222,23 @@ function EventForm({ onSubmit, onCancel }: EventFormProps) {
                     className={inputClass}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="price" className={labelClass}>
+                  <DollarSign className="h-4 w-4 text-indigo-500" />
+                  Base Ticket Price ($) <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="Enter ticket price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className={inputClass}
+                />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -3,28 +3,31 @@ import { prisma } from '@/app/lib/prisma';
 import { verifyAuth, unauthorized } from '@/app/lib/auth';
 import crypto from 'crypto';
 
+// GET - List tickets for the user
 export async function GET(req: NextRequest) {
   try {
-    const { authorized, user, error } = await verifyAuth(req);
+    const { authorized, user } = await verifyAuth(req);
+    if (!authorized || !user) return unauthorized();
 
-    if (!authorized || !user) {
-      return unauthorized();
-    }
-
-    // Get user's tickets
     const tickets = await prisma.ticket.findMany({
       where: { userId: Number(user.id) },
       include: {
-        event: true,
+        event: {
+          select: {
+            id: true,
+            name: true,
+            startTime: true,
+            endTime: true,
+            location: true,
+            price: true, 
+          }
+        },
         checkIn: true,
         discount: true,
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      tickets,
-    });
+    return NextResponse.json({ success: true, tickets });
   } catch (error) {
     console.error('Tickets fetch error:', error);
     return NextResponse.json(
@@ -34,17 +37,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Purchase a ticket for an event
+// POST - Purchase a ticket
 export async function POST(req: NextRequest) {
   try {
-    const { authorized, user, error } = await verifyAuth(req);
+    const { authorized, user } = await verifyAuth(req);
+    if (!authorized || !user) return unauthorized();
 
-    if (!authorized || !user) {
-      return unauthorized();
-    }
-
-    const body = await req.json();
-    const { eventId, tier = 'General', discountCode } = body;
+    const { eventId, tier = 'General', discountCode } = await req.json();
 
     if (!eventId) {
       return NextResponse.json(
@@ -53,7 +52,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if event exists
     const event = await prisma.event.findUnique({
       where: { id: Number(eventId) },
     });
@@ -65,7 +63,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check remaining tickets
     if (event.remaining <= 0) {
       return NextResponse.json(
         { success: false, message: 'Event is sold out' },
@@ -73,29 +70,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Set base price based on tier
-    let price = tier === 'VIP' ? 100.0 : 50.0; // Example prices
+    // Calculate base price from event
+    if (event.price == null) {
+      return NextResponse.json(
+        { success: false, message: 'Event price is not set' },
+        { status: 500 }
+      );
+    }
+
+    let price = event.price;
+    if (tier === 'VIP') {
+      price = event.price * 1.5;
+    }
+
     let discountValue = 0;
     let discountId = null;
 
-    // Apply discount if provided
     if (discountCode) {
       const discount = await prisma.discount.findFirst({
         where: { code: discountCode },
       });
 
       if (discount) {
-        if (discount.type === 'Percentage') {
-          discountValue = price * (discount.value / 100);
-        } else {
-          discountValue = discount.value;
-        }
-        
-        price -= discountValue;
-        if (price < 0) price = 0;
+        discountValue =
+          discount.type === 'Percentage'
+            ? price * (discount.value / 100)
+            : discount.value;
+
+        price = Math.max(0, price - discountValue);
         discountId = discount.id;
 
-        // Update times used
         await prisma.discount.update({
           where: { id: discount.id },
           data: { timesUsed: { increment: 1 } },
@@ -103,27 +107,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate QR code data (encrypted user and event data)
-    const qrData = {
-      userId: user.id,
-      eventId: Number(eventId),
-      timestamp: new Date().toISOString(),
-    };
-    
     const qrCodeData = crypto
       .createHash('sha256')
-      .update(JSON.stringify(qrData))
+      .update(
+        JSON.stringify({
+          userId: user.id,
+          eventId,
+          timestamp: new Date().toISOString(),
+        })
+      )
       .digest('hex');
 
-    // Create ticket and update remaining count in a transaction
     const ticket = await prisma.$transaction(async (tx) => {
-      // Decrement remaining count
       await tx.event.update({
         where: { id: Number(eventId) },
         data: { remaining: { decrement: 1 } },
       });
 
-      // Create ticket
       return await tx.ticket.create({
         data: {
           userId: Number(user.id),
@@ -155,4 +155,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

@@ -47,11 +47,12 @@ export async function POST(req: NextRequest) {
       description, 
       capacity, 
       location, 
+      price,
       startTime, 
       endTime 
     } = body;
 
-    if (!name || !description || !capacity || !location || !startTime || !endTime) {
+    if (!name || !description || !capacity || !location || !startTime || !endTime || !price) {
       return NextResponse.json(
         { success: false, message: 'All fields are required' },
         { status: 400 }
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
         capacity: Number(capacity),
         remaining: Number(capacity),
         location,
+        price: Number(price),
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         organizerId: Number(user.id),

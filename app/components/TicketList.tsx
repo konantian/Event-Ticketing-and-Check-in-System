@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Ticket, Calendar, MapPin, Clock, QrCode, CheckCircle2, 
-   CalendarDays, RefreshCcw, Tag, Info 
+   CalendarDays, RefreshCcw, Tag, Info, 
+   DollarSign
 } from "lucide-react";
 import { toast, Toaster } from 'sonner';
 import Link from 'next/link';
@@ -22,6 +23,7 @@ interface TicketType {
     timestamp: string;
   } | null;
   event: {
+    price: number;
     name: string;
     startTime: string;
     endTime: string;
@@ -351,7 +353,19 @@ function TicketList() {
                                 <span className="ticket-detail-value">{ticket.tier || 'General'}</span>
                               </div>
                             </div>
-                            
+
+                            <div className="ticket-detail-item">
+                              <div className="ticket-detail-icon">
+                                <DollarSign className="h-4 w-4 text-indigo-500" />
+                              </div>
+                              <div className="ticket-detail-content">
+                                <span className="ticket-detail-label">Paid</span>
+                                <span className="ticket-detail-value font-semibold text-green-700">
+                                  ${ticket.price?.toFixed(2) ?? '--'}
+                                </span>
+                              </div>
+                            </div>
+
                             <div className="ticket-detail-item">
                               <div className="ticket-detail-icon">
                                 <Ticket className="h-4 w-4 text-indigo-500" />
