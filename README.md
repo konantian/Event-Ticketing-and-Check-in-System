@@ -1,513 +1,218 @@
-# Event Ticketing Backend
 
-## Setup Instructions
+# Event Ticketing and QR Code Check-in System
 
-1. Install dependencies:
-   ```
-   npm install
-   ```
+**Yuan Wang**  
+1002766526  
+[ywang.wang@mail.utoronto.ca](mailto:ywang.wang@mail.utoronto.ca)  
 
-2. Set up the database using Prisma:
-   ```
-   npx prisma migrate dev --name init
-   ```
+**Lanhui Shi**  
+1004989961  
+[lanhui.shi@mail.utoronto.ca](mailto:lanhui.shi@mail.utoronto.ca)  
 
-3. Start the server:
-   ```
-   npm start
-   ```
+**Yingzhuo Sun**  
+1011274425  
+[yingzhuo.sun@mail.utoronto.ca](mailto:yingzhuo.sun@mail.utoronto.ca)  
 
-## Environment Variables
+**Course**: ECE1724  
+**Date**: April 20, 2025  
 
-- `DATABASE_URL`: The connection string for PostgreSQL database.
-- `JWT_SECRET`: A secure random string used to sign and verify JSON Web Tokens (JWTs). This should be a long, random string and should be kept secret. Used for user authentication and session management. Use the different version for local and prod environment.
+---
 
+## 1. Introduction
 
-## Seeding the Database
+In today’s fast-paced, digital-first world, the demand for efficient, automated, and user-friendly event management platforms has grown significantly. Traditional methods of handling event logistics—such as manual registration, paper-based tickets, and spreadsheet-based attendee tracking—are no longer viable for medium–to large-scale events. Even smaller-scale gatherings increasingly require digital tools for smooth execution.
 
-To populate your development database with sample users and events:
+Our project, the **Event Ticketing and QR Code Check-in System**, is designed to address these growing needs. It is a full-stack web application that offers a seamless, secure, and scalable solution for event organizers and attendees. The system handles ticket generation, registration, check-in, and live analytics through modern technologies such as **Next.js**, **PostgreSQL**, and **Tailwind CSS**.
 
+Unlike existing platforms that charge high service fees and lack real-time functionalities, our system emphasizes affordability, real-time check-in capability, and full control over the data and design. By leveraging a modular and role-based architecture, the platform distinguishes itself by offering a targeted user experience for each user type, making event management not only efficient but also intuitive and enjoyable.
 
-```
-npm run seed
-```
+---
 
-This command will create:
+## 2. Motivation
 
-🧑‍💼 One Organizer user
+We were inspired to build this project by our frustrations with existing event platforms. Platforms like **Eventbrite**, **Meetup**, and **TicketTailor** offer many features, but they fall short in several critical aspects. Most of them charge high fees per ticket, have rigid UI/UX flows, provide limited control over the registration form design, and often lack live features such as real-time check-in dashboards and QR verification systems.
 
-🧑 One Attendee user
+We envisioned a customizable, affordable, and extensible system that would cater to not only professional conference organizers but also campus clubs, community organizers, and anyone who wants to host an event with modern tools without the financial or operational burden of enterprise-grade services.
 
-Three sample events owned by the Organizer
+Our goals were to:
 
-## Users
+- Generate unique, fraud-resistant tickets
+- Validate check-ins via QR codes in real time
+- Maintain full control over data and branding
+- Provide a simple and secure registration and entry process
 
-The system includes:
+We also wanted this project to be a learning opportunity—to build a real-world system that addresses asynchronous communication, secure authentication, performance optimization, and data integrity challenges in a full-stack environment.
 
-👨‍💼 One Organizer user
-👤 One Attendee user
+---
 
-| Role      | Email                | Password |
-|-----------|----------------------|----------|
-| Organizer | organizer@example.com | test1234 |
-| Attendee  | attendee@example.com  | test1234 |
+## 3. Project Objectives
 
-## Using Prisma Studio
+The overarching goal of this project was to create a platform that bridges the gap between affordability, usability, and feature richness in event management. More specifically, we sought to accomplish the following technical and user-centered objectives:
 
-use Prisma Studio to visually browse and edit local database:
-```
-npx prisma studio
-```
-This opens a web UI at http://localhost:5555, you can:
+- **End-to-End Ticketing System**: Allow organizers to create events and issue dynamic, tamper-proof tickets embedded with QR codes.
+- **Role-based Access**: Provide unique user interfaces and permissions for organizers, and attendees.
+- **Real-Time Check-in**: Enable event organizers to scan QR codes and validate tickets with instant feedback.
+- **Dashboard & Analytics**: Offer live metrics for event organizers to monitor ticket sales and check-in rates.
+- **Responsive User Interface**: Ensure usability on mobile devices, tablets, and desktops with a clean design powered by Tailwind CSS.
+- **Extensible Architecture**: Use modular code practices to make it easy to add future enhancements such as payment gateways, email notifications, and calendar syncing.
 
-View all tables: Users, Events, Tickets, Check-ins, Discounts
+These objectives helped guide our technology choices and development workflow throughout the project lifecycle.
 
-Edit or add data for testing
+---
 
-Explore relationships across tables
+## 4. System Architecture and Technology Stack
 
+Our system was developed as a modern full-stack web application using Next.js, leveraging both its front-end rendering capabilities and API support for back-end functionalities. The architectural approach was monorepo-based, with the database schema defined using Prisma ORM and deployed via PostgreSQL.
 
-## Database Tables
+- **Frontend Framework**: Next.js (App Router, Server Components)
+- **Backend Services**: Next.js API Routes
+- **Database**: PostgreSQL with Prisma
+- **Authentication**: JSON Web Tokens (JWT) + bcrypt
+- **Styling**: Tailwind CSS
+- **QR Code**: `qrcode` npm package
+- **Cloud Deployment**: Vercel
+- **Testing Tools**: Jest for unit testing and Cypress for E2E tests
+- **CI/CD**: GitHub Actions for build/test workflows
 
-1. **User Table**
-    - `id`: Primary Key
-    - `email`: Unique identifier for the user
-    - `password`: Hashed password
-    - `role`: User role (Organizer, Attendee)
-    - `createdAt`: Timestamp of user creation (Optional)
-    - `updatedAt`: Timestamp of last update (Optional)
+Each user interface and interaction was crafted with clarity and responsiveness in mind, following a mobile-first design philosophy. The backend logic was designed to be stateless and scalable, with encrypted payloads in QR codes to ensure that each ticket could only be validated once.
 
-2. **Event Table**
-    - `id`: Primary Key
-    - `organizerId`: Foreign Key referencing User
-    - `name`: Name of the event
-    - `description`: Description of the event
-    - `capacity`: Maximum number of attendees
-    - `remaining`: Number of remaining tickets for the event
-    - `location`: Event location
-    - `startTime`: Start time of the event
-    - `endTime`: End time of the event
-    - `createdAt`: Timestamp of event creation (Optional)
-    - `updatedAt`: Timestamp of last update (Optional)
+---
 
-3. **Ticket Table**
-    - `id`: Primary Key
-    - `userId`: Foreign Key referencing User
-    - `eventId`: Foreign Key referencing Event
-    - `price`: Price of the ticket
-    - `tier`: Ticket tier (General, VIP)
-    - `qrCodeData`: Encrypted QR code data
-    - `discountCodeId`: Foreign Key referencing Discount (Optional)
-    - `createdAt`: Timestamp of ticket creation (Optional)
-    - `updatedAt`: Timestamp of last update (Optional)
+## 5. Features
 
-4. **Check-in Table**
-    - `id`: Primary Key
-    - `ticketId`: Foreign Key referencing Ticket
-    - `status`: Check-in status (Checked In, Not Checked In)
-    - `timestamp`: Timestamp of check-in
+### 5.1 Role-Based User Authentication
+Users are classified into three roles: **Organizer** and **Attendee**. Each role has its own dashboard and set of permissions. Authentication is managed via JSON Web Tokens, which ensures secure and stateless session handling.
+- Organizers can create events, manage ticket tiers, view analytics, access the QR scanning module and verify tickets.
+- Attendees can register for events and retrieve their generated tickets.
 
-5. **Discount Table**
-    - `id`: Primary Key
-    - `code`: Discount code
-    - `type`: Discount type (Percentage or Fixed Amount)
-    - `value`: Discount value
-    - `timesUsed`: Number of times the discount has been used (Optional)
+### 5.2 Event Creation and Management
+Organizers can create an event by specifying a title, description, capacity, venue, and date/time range. They can also define ticket tiers (e.g., General Admission, VIP), each with separate pricing and capacity limits. The interface supports markdown-formatted descriptions and integrates calendar-friendly timestamps.
 
-## API Endpoints
+### 5.3 QR Code Ticketing
+Once an attendee registers for an event, a ticket is generated containing a unique, encrypted QR code. This code includes embedded ticket information (ticket ID, user ID, event ID) and is digitally signed to prevent tampering. Users can view, save, or print the QR code for use during check-in.
 
-### User Authentication
+### 5.4 Real-Time Check-In Dashboard
+Event organizers have access to a web-based scanner module (works on mobile). Upon scanning a QR code, the system verifies the ticket’s validity, checks for duplication, and updates the check-in status in real time. The feedback is immediate—valid, already checked-in, or invalid—with color-coded messages.
+Organizers can view a real-time dashboard showing:
+- Total registered attendees
+- Number checked in
+- Remaining capacity
 
-#### Register a new user
-`POST` `/api/register`
+### 5.5 Responsive and Accessible Design
+The user interface is built with accessibility in mind. Color contrast, keyboard navigation, and mobile responsiveness were tested across multiple viewports and devices. Tailwind CSS allowed us to maintain a consistent design language with minimal overhead.
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | None | required | object (JSON) | User registration data |
+---
 
-##### Request Body
-```json
-{
-  "email": "string",
-  "password": "string",
-  "role": "Organizer" | "Attendee"
-}
-```
+## 6. User Guide
 
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `201` | `application/json` | Created user object |
-> | `400` | `application/json` | `{"error":"Validation error message"}` |
+This project supports two types of users: Organizers and Attendees. Each user type has access to different features within the system. Below is a step-by-step guide to how each user interacts with the platform.
 
-##### Response Example
-```json
-{
-  "id": "string",
-  "email": "string",
-  "role": "string",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
+### General Usage
+1. Visit: [event-ticketing-and-check-in-system.vercel.app](https://event-ticketing-and-check-in-system.vercel.app)
+2. Click on the login button to sign in using your account credentials.
+3. If you don't have an account, click the "Register" button and register as required. After successful registration, you will be automatically redirected to log in
+4. After logging in, the system will route you to the appropriate dashboard based on your role (Organizer or Attendee).
+
+### For Organizers
+Organizers are responsible for creating and managing events. Steps:
+1. After logging in as an organizer, you will land on the event dashboard.
+2. Click on the “Create Event” button to access the event creation form.
+3. Fill in event details including name, description, date, time, location, and capacity.
+4. Add ticket tiers with specific pricing and limits.
+5. Submit the form to publish the event.
+6. You can view a list of created events, track ticket sales, and monitor real-time check-in data from your dashboard.
+
+### For Attendees
+Attendees are the users who register for events and receive QR code tickets. Steps:
+1. Go to the home page to browse the listed events.
+2. Click on a “Purchase” button for an event.
+3. Select the type of ticket you want (regular or vip) and the payment information
+4. After completing the process, visit the “My Tickets” section to view your QR code ticket.
+5. Show this QR code when arriving at the event for scanning.
+
+---
+
+## 7. Development Guide
+
+### 1. Prerequisites
+- Node.js 18+
+- npm
+- PostgreSQL
+- Git
+
+### 2. Clone & Setup
+
+```bash
+git clone https://github.com/konantian/Event-Ticketing-and-Check-in-System.git
+cd event-ticketing-and-check-in-system
+npm install
 ```
 
-#### Login user
-`POST` `/api/login`
+### 3. Add Environment Variables
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | None | required | object (JSON) | User login credentials |
+Create `.env.local`:
 
-##### Request Body
-```json
-{
-  "email": "string",
-  "password": "string"
-}
+```env
+DATABASE_URL=postgresql://youruser:yourpass@localhost:5432/eventdb
+JWT_SECRET=your_very_secure_secret
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | JWT token and user object |
-> | `401` | `application/json` | `{"error":"Invalid credentials"}` |
+### 4. Database Initialization
 
-##### Response Example
-```json
-{
-  "token": "string (JWT)",
-  "user": {
-    "id": "string",
-    "email": "string",
-    "role": "string"
-  }
-}
+```bash
+npx prisma migrate dev --name init
+npx prisma generate
+npx prisma studio  # (optional)
 ```
 
-#### Get current user
-`GET` `/api/user`
+### 5. Start Development Server
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | User object |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-
-##### Response Example
-```json
-{
-  "id": "string",
-  "email": "string",
-  "role": "string",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
+```bash
+npm run dev
 ```
 
-### Event Management
+Visit [http://localhost:3000](http://localhost:3000)
 
-#### Create a new event
-`POST` `/api/events`
+### 6. Testing
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token (Organizer role required) |
-> | None | required | object (JSON) | Event data |
-
-##### Request Body
-```json
-{
-  "name": "string",
-  "description": "string",
-  "capacity": "number",
-  "location": "string",
-  "startTime": "string (ISO date)",
-  "endTime": "string (ISO date)"
-}
+```bash
+npm run test
 ```
 
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `201` | `application/json` | Created event object |
-> | `400` | `application/json` | `{"error":"Validation error message"}` |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
+Tests are located under the `tests/` folder.
 
-##### Response Example
-```json
-{
-  "id": "string",
-  "organizerId": "string",
-  "name": "string",
-  "description": "string",
-  "capacity": "number",
-  "location": "string",
-  "startTime": "string (ISO date)",
-  "endTime": "string (ISO date)",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
+---
 
-#### List all events
-`GET` `/api/events`
+## 8. Individual Contribution
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | page | query | number | Page number for pagination (optional) |
-> | limit | query | number | Items per page (optional) |
+| Name         | Contributions                            |
+|--------------|-------------------------------------------|
+| Yingzhuo Sun | Project report, API unit tests            |
+| Yuan Wang    | Backend APIs, UI improvement              |
+| Lanhui Shi   | Frontend development, UI/UX design        |
 
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | List of events with pagination |
+---
 
-##### Response Example
-```json
-{
-  "events": [
-    {
-      "id": "string",
-      "organizerId": "string",
-      "name": "string",
-      "description": "string",
-      "capacity": "number",
-      "location": "string",
-      "startTime": "string (ISO date)",
-      "endTime": "string (ISO date)",
-      "createdAt": "string (ISO date)",
-      "updatedAt": "string (ISO date)"
-    }
-  ],
-  "total": "number",
-  "page": "number",
-  "limit": "number"
-}
-```
+## 9. Lessons Learned and Future Work
 
-#### Get event by ID
-`GET` `/api/events/{id}`
+This project allowed us to apply our full-stack knowledge, covering everything from database modeling and secure authentication to responsive design and real-time logic. We encountered many real-world development scenarios, including edge-case handling, code modularity, and performance optimization.
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | id | path | string | Event ID |
+**Future Improvements**:
 
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Event object |
-> | `404` | `application/json` | `{"error":"Event not found"}` |
+- Stripe/PayPal integration for real ticket payments
+- Email reminders and push notifications
+- Event feedback/survey collection post-check-in
 
-##### Response Example
-```json
-{
-  "id": "string",
-  "organizerId": "string",
-  "name": "string",
-  "description": "string",
-  "capacity": "number",
-  "remaining": "number",
-  "location": "string",
-  "startTime": "string (ISO date)",
-  "endTime": "string (ISO date)",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
+---
 
-#### Update event by ID
-`PUT` `/api/events/{id}`
+## 10. Conclusion
 
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | id | path | string | Event ID |
-> | Authorization | header | string | JWT token (Organizer role required) |
-> | None | required | object (JSON) | Updated event data |
+The Event Ticketing and QR Code Check-in System is more than just a course project—it’s a practical tool that could easily be extended into a usable SaaS product. It offers an intuitive, real-time, and secure solution for anyone needing to manage events without the overhead or cost of legacy platforms.
+Through this project, we not only learned about the technical intricacies of modern web development but also about designing for real users with real problems. We’re proud of what we’ve built and look forward to continuing its development.
 
-##### Request Body
-```json
-{
-  "name": "string",
-  "description": "string",
-  "capacity": "number",
-  "location": "string",
-  "startTime": "string (ISO date)",
-  "endTime": "string (ISO date)"
-}
-```
+---
 
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Updated event object |
-> | `400` | `application/json` | `{"error":"Validation error message"}` |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-> | `404` | `application/json` | `{"error":"Event not found"}` |
+## 11. Demo Video
 
-##### Response Example
-```json
-{
-  "id": "string",
-  "organizerId": "string",
-  "name": "string",
-  "description": "string",
-  "capacity": "number",
-  "remaining": "number",
-  "location": "string",
-  "startTime": "string (ISO date)",
-  "endTime": "string (ISO date)",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
-
-#### Delete event by ID
-`DELETE` `/api/events/{id}`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | id | path | string | Event ID |
-> | Authorization | header | string | JWT token (Organizer role required) |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Success message |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-> | `404` | `application/json` | `{"error":"Event not found"}` |
-
-##### Response Example
-```json
-{
-  "success": "boolean",
-  "message": "string"
-}
-```
-
-### Ticket Management
-
-#### Create a new ticket
-`POST` `/api/tickets`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token (Attendee role required) |
-> | None | required | object (JSON) | Ticket data |
-
-##### Request Body
-```json
-{
-  "eventId": "string",
-  "tier": "General" | "VIP",
-  "discountCode": "string (optional)"
-}
-```
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `201` | `application/json` | Created ticket object |
-> | `400` | `application/json` | `{"error":"Validation error message"}` |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-
-##### Response Example
-```json
-{
-  "id": "string",
-  "userId": "string",
-  "eventId": "string",
-  "price": "number",
-  "tier": "string",
-  "qrCodeData": "string",
-  "discountCodeId": "string (optional)",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
-
-#### List all tickets
-`GET` `/api/tickets`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | Authorization | header | string | JWT token |
-> | page | query | number | Page number for pagination (optional) |
-> | limit | query | number | Items per page (optional) |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | List of tickets with pagination |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-
-##### Response Example
-```json
-{
-  "tickets": [
-    {
-      "id": "string",
-      "userId": "string",
-      "eventId": "string",
-      "price": "number",
-      "tier": "string",
-      "qrCodeData": "string",
-      "discountCodeId": "string (optional)",
-      "createdAt": "string (ISO date)",
-      "updatedAt": "string (ISO date)"
-    }
-  ],
-  "total": "number",
-  "page": "number",
-  "limit": "number"
-}
-```
-
-#### Get ticket by ID
-`GET` `/api/tickets/{id}`
-
-##### Parameters
-> | name | type | data type | description |
-> |------|------|-----------|-------------|
-> | id | path | string | Ticket ID |
-> | Authorization | header | string | JWT token |
-
-##### Responses
-> | http code | content-type | response |
-> |-----------|--------------|----------|
-> | `200` | `application/json` | Ticket object |
-> | `401` | `application/json` | `{"error":"Not authenticated"}` |
-> | `403` | `application/json` | `{"error":"Not authorized"}` |
-> | `404` | `application/json` | `{"error":"Ticket not found"}` |
-
-##### Response Example
-```json
-{
-  "id": "string",
-  "userId": "string",
-  "eventId": "string",
-  "price": "number",
-  "tier": "string",
-  "qrCodeData": "string",
-  "discountCodeId": "string (optional)",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
+🎥 [Click here to watch the demo video](https://github.com/konantian/Event-Ticketing-and-Check-in-System/raw/main/demo.mp4)
