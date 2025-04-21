@@ -50,6 +50,7 @@ async function main() {
       location: 'Toronto Convention Centre',
       startTime: new Date('2025-06-15T09:00:00Z'),
       endTime: new Date('2025-06-15T17:00:00Z'),
+      price: 100,
       organizer: {
         connect: { id: organizer.id }
       }
@@ -75,6 +76,7 @@ async function main() {
       location: 'Downtown Hub',
       startTime: new Date('2025-07-01T18:00:00Z'),
       endTime: new Date('2025-07-01T21:00:00Z'),
+      price: 50,
       organizer: {
         connect: { id: organizer.id }
       }
@@ -100,6 +102,7 @@ async function main() {
       location: 'UofT Campus',
       startTime: new Date('2025-05-10T10:00:00Z'),
       endTime: new Date('2025-05-10T16:00:00Z'),
+      price: 20,
       organizer: {
         connect: { id: organizer.id }
       }
