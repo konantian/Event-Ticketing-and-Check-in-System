@@ -4,7 +4,6 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Hash the password for all users
   const hashedPassword = await bcrypt.hash('test1234', 10);
 
   // Create sample users
@@ -29,7 +28,7 @@ async function main() {
   });
 
   console.log('Users created or updated successfully: Organizer, Attendee');
-  
+
   // Create sample events
   const event1 = await prisma.event.upsert({
     where: { id: 1 },
@@ -41,6 +40,7 @@ async function main() {
       location: 'Toronto Convention Centre',
       startTime: new Date('2025-06-15T09:00:00Z'),
       endTime: new Date('2025-06-15T17:00:00Z'),
+      price: 100, 
     },
     create: {
       name: 'Tech Conference 2025',
@@ -67,6 +67,7 @@ async function main() {
       location: 'Downtown Hub',
       startTime: new Date('2025-07-01T18:00:00Z'),
       endTime: new Date('2025-07-01T21:00:00Z'),
+      price: 50, 
     },
     create: {
       name: 'Startup Pitch Night',
@@ -93,6 +94,7 @@ async function main() {
       location: 'UofT Campus',
       startTime: new Date('2025-05-10T10:00:00Z'),
       endTime: new Date('2025-05-10T16:00:00Z'),
+      price: 20,
     },
     create: {
       name: 'Developer Bootcamp',
@@ -111,8 +113,8 @@ async function main() {
 
   console.log('Events created successfully');
 
-  // Create discounts
-  const discountCode = await prisma.discount.upsert({
+  // Create discount
+  await prisma.discount.upsert({
     where: { code: 'DISCOUNT20' },
     update: {},
     create: {
@@ -129,27 +131,26 @@ async function main() {
   for (const ticketData of [
     {
       userId: attendee.id,
-      eventId: event1.id, // Tech Conference 2025
+      eventId: event1.id,
       price: 100,
       tier: 'General',
       qrCodeData: `ticket-event1-${Date.now()}-1`,
     },
     {
       userId: attendee.id,
-      eventId: event2.id, // Startup Pitch Night
+      eventId: event2.id,
       price: 50,
       tier: 'VIP',
       qrCodeData: `ticket-event2-${Date.now()}-2`,
     },
     {
       userId: attendee.id,
-      eventId: event3.id, // Developer Bootcamp
+      eventId: event3.id,
       price: 20,
       tier: 'General',
       qrCodeData: `ticket-event3-${Date.now()}-3`,
     },
   ]) {
-    // Check if ticket already exists
     const existingTicket = await prisma.ticket.findFirst({
       where: {
         userId: ticketData.userId,
@@ -158,9 +159,7 @@ async function main() {
     });
 
     if (!existingTicket) {
-      await prisma.ticket.create({
-        data: ticketData,
-      });
+      await prisma.ticket.create({ data: ticketData });
     }
   }
 
@@ -175,4 +174,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
